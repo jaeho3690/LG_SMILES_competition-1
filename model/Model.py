@@ -73,6 +73,8 @@ class MSTS:
         self._encoder.train()
         self._decoder.train()
 
+        loss = None
+
         for i, (imgs, caps, caplens) in enumerate(train_loader):
             print(i,end='\r')
             imgs = imgs.to(self._device)
@@ -89,7 +91,6 @@ class MSTS:
             # Remove timesteps that we didn't decode at, or are pads
             # pack_padded_sequence is an easy trick to do this
             total_length = decode_lengths.size(1)
-            print('@@@@@@@@@@@',total_length)
             predictions = pack_padded_sequence(predictions, decode_lengths, batch_first=True, total_length=total_length).data
             targets = pack_padded_sequence(targets, decode_lengths, batch_first=True, total_length=total_length).data
 
@@ -111,3 +112,23 @@ class MSTS:
             self._decoder_optimizer.step()
             self._encoder_optimizer.step()
 
+        return loss
+
+    def model_save(self, save_num):
+        torch.save(
+            self._decoder.state_dict(),
+            'graph_save/decoder{}.pkl'.format(str(save_num).zfill(3))
+        )
+        torch.save(
+            self._encoder.state_dict(),
+            'graph_save/encoder{}.pkl'.format(str(save_num).zfill(3))
+        )
+
+
+    def mode_load(self, load_num):
+        self._decoder.load_state_dict(
+            torch.load('graph_save/decoder{}.pkl'.format(str(load_num).zfill(3)))
+        )
+        self._encoder.load_state_dict(
+            torch.load('graph_save/encoder{}.pkl'.format(str(load_num).zfill(3)))
+        )

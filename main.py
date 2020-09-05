@@ -51,7 +51,12 @@ val_loader = torch.utils.data.DataLoader(
     batch_size=config.batch_size, shuffle=True, num_workers=config.workers, pin_memory=True)
 
 
-model.train(train_loader)
+for itr in range(config.epochs):
+    loss = model.train(train_loader)
+    if itr % 10 == 0:
+        model.model_save(save_num=itr)
+        print('model loss at {} epochs:'.format(itr), loss)
+
 
 
 
