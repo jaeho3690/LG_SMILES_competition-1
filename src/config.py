@@ -7,5 +7,6 @@ train_csv_dir = data_dir /'train.csv'
 train_pickle_dir = data_dir /'train_modified.pkl'
 
 input_data_dir = data_dir / 'input_data'
+base_file_name = 'seed_123_max75smiles'
 
 random_seed = 123
