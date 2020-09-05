@@ -12,7 +12,7 @@ class MSTS:
         # self._data_folder = config.data_folder
         # self._data_name = config.data_name
 
-        self._vocab_size = 48
+        self._vocab_size = 50
         self._emb_dim = config.emb_dim
         self._attention_dim = config.attention_dim
         self._decoder_dim = config.decoder_dim
@@ -85,8 +85,8 @@ class MSTS:
 
             # Remove timesteps that we didn't decode at, or are pads
             # pack_padded_sequence is an easy trick to do this
-            predictions, _ = pack_padded_sequence(predictions, decode_lengths, batch_first=True)
-            targets, _ = pack_padded_sequence(targets, decode_lengths, batch_first=True)
+            predictions = pack_padded_sequence(predictions, decode_lengths, batch_first=True).data
+            targets = pack_padded_sequence(targets, decode_lengths, batch_first=True).data
 
             # Calculate loss
             loss = self._criterion(predictions, targets)
