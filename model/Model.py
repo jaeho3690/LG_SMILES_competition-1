@@ -5,7 +5,7 @@ import torchvision.transforms as transforms
 from torch import nn
 from torch.nn.utils.rnn import pack_padded_sequence
 
-from Network import Encoder, DecoderWithAttention
+from model.Network import Encoder, DecoderWithAttention
 
 class MSTS:
     def __init__(self, config):
@@ -32,7 +32,7 @@ class MSTS:
         self._best_bleu4 = config.best_bleu4
         self._print_freq = config.print_freq
         self._fine_tune_encoder = config.fine_tune_encoder
-        self._checkpoint = config.checkpoint
+        # self._checkpoint = config.checkpoint
 
         self._decoder = DecoderWithAttention(attention_dim=self._attention_dim,
                                              embed_dim=self._emb_dim,
@@ -68,7 +68,7 @@ class MSTS:
         self._encoder.train()
         self._decoder.train()
 
-        for i, (imgs, caps, caplens) enumerate(train_loader):
+        for i, (imgs, caps, caplens) in enumerate(train_loader):
             imgs = imgs.to(self._device)
             caps = caps.to(self._device)
             caplens = caplens.to(self._device)
