@@ -9,8 +9,8 @@ from model.Network import Encoder, DecoderWithAttention
 
 class MSTS:
     def __init__(self, config):
-        self._data_folder = config.data_folder
-        self._data_name = config.data_name
+        # self._data_folder = config.data_folder
+        # self._data_name = config.data_name
 
         self._vocab_size = 48
         self._emb_dim = config.emb_dim
@@ -48,6 +48,8 @@ class MSTS:
                                                            self._encoder.parameters()),
                                                            lr=self._encoder_lr) if self._fine_tune_encoder else None
 
+        self._encoder.to(self._device)
+        self._decoder.to(self._device)
         self._criterion = nn.CrossEntropyLoss().to(self._device)
 
     def _clip_gradient(self, optimizer, grad_clip):
@@ -69,6 +71,7 @@ class MSTS:
         self._decoder.train()
 
         for i, (imgs, caps, caplens) in enumerate(train_loader):
+            print(i,end='\r')
             imgs = imgs.to(self._device)
             caps = caps.to(self._device)
             caplens = caplens.to(self._device)
