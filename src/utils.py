@@ -68,6 +68,9 @@ def create_input_files(train_dir,train_pickle_dir,output_folder,min_token_freq,m
     """
     df = pd.read_pickle(train_pickle_dir)
 
+    df = df.sample(n=10000)
+    df.reset_index(inplace=True)
+    print(df.head())
     # Read image paths and SMILES for each image
     train_image_paths = []
     train_image_smiles = []
@@ -79,30 +82,33 @@ def create_input_files(train_dir,train_pickle_dir,output_folder,min_token_freq,m
 
 
     for index in tqdm(df.index,desc='Looping index'):
-        smiles_caption=[]
-        for token in df.loc[index,'SMILES_TOKEN']:
-            # Update token frequency
-            token_freq.update(token)
-        
-        if len(df.loc[index,'SMILES'])==0:
+        try:
+            smiles_caption=[]
+            for token in df.loc[index,'SMILES_TOKEN']:
+                # Update token frequency
+                token_freq.update(token)
+            
+            if len(df.loc[index,'SMILES'])==0:
+                continue
+
+            smiles_caption.append(df.loc[index,'SMILES'])
+
+            path = train_dir / df.loc[index,'file_name']
+
+
+            split_location = df.loc[index,'split']
+
+            if  split_location in {'train'}:
+                train_image_paths.append(path)
+                train_image_smiles.append(smiles_caption)
+            elif split_location in {'val'}:
+                val_image_paths.append(path)
+                val_image_smiles.append(smiles_caption)
+            elif split_location in {'test'}:
+                test_image_paths.append(path)
+                test_image_smiles.append(smiles_caption)
+        except:
             continue
-
-        smiles_caption.append(df.loc[index,'SMILES'])
-
-        path = train_dir / df.loc[index,'file_name']
-
-
-        split_location = df.loc[index,'split']
-
-        if  split_location in {'train'}:
-            train_image_paths.append(path)
-            train_image_smiles.append(smiles_caption)
-        elif split_location in {'val'}:
-            val_image_paths.append(path)
-            val_image_smiles.append(smiles_caption)
-        elif split_location in {'test'}:
-            test_image_paths.append(path)
-            test_image_smiles.append(smiles_caption)
 
     # Sanity Check
     assert len(train_image_paths) == len(train_image_smiles)
@@ -138,29 +144,31 @@ def create_input_files(train_dir,train_pickle_dir,output_folder,min_token_freq,m
             caplens = []
 
             for i, path in enumerate(tqdm(impaths)):
-                # Read images
-                img = Image.open(impaths[i])
-                img= img.resize((256,256))
-                img = np.array(img)
-                img = np.rollaxis(img, 2, 0)
-                assert img.shape == (3, 256, 256)
-                assert np.max(img) <= 255
+                try:
+                    # Read images
+                    img = Image.open(impaths[i])
+                    img= img.resize((256,256))
+                    img = np.array(img)
+                    img = np.rollaxis(img, 2, 0)
+                    assert img.shape == (3, 256, 256)
+                    assert np.max(img) <= 255
 
-                # Save image to HDF5 file
-                images[i] = img
+                    # Save image to HDF5 file
+                    images[i] = img
 
-                smiles_caption = smiles_captions[i]
-                for j, c in enumerate(smiles_caption):
+                    smiles_caption = smiles_captions[i]
+                    for j, c in enumerate(smiles_caption):
 
-                    # Encode captions
-                    enc_c = [token_map['<start>']] + [token_map.get(token, token_map['<unk>']) for token in c] + [
-                        token_map['<end>']] + [token_map['<pad>']] * (max_len - len(c))
-                    print(enc_c)
-                    # Find caption lengths
-                    c_len = len(c) + 2
+                        # Encode captions
+                        enc_c = [token_map['<start>']] + [token_map.get(token, token_map['<unk>']) for token in c] + [
+                            token_map['<end>']] + [token_map['<pad>']] * (max_len - len(c))
+                        # Find caption lengths
+                        c_len = len(c) + 2
 
-                    enc_captions.append(enc_c)
-                    caplens.append(c_len)
+                        enc_captions.append(enc_c)
+                        caplens.append(c_len)
+                except:
+                    continue
             # Sanity check
             assert images.shape[0] == len(enc_captions) == len(caplens)
 
