@@ -1,11 +1,15 @@
 import os
 import argparse
+import torch
+import torchvision.transforms as transforms
 
 from model.Model import MSTS
+from src.datasets import SmilesDataset
+
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--data_folder', type=str, default='', help='folder with image data files saved')
-parser.add_argument('--data_name', type=str, default='', help='csv file that contain information about image data')
+parser.add_argument('--data_folder', type=str, default='home/jaeho_ubuntu/SMILES/data/input_data', help='folder with image data files saved')
+parser.add_argument('--data_name', type=str, default='seed_123_max75smiles', help='csv file that contain information about image data')
 
 parser.add_argument('--emb_dim', type=int, default=512, help='dimension of word embeddings')
 parser.add_argument('--attention_dim', type=int, default=512, help='dimension of attention linear layers')
@@ -29,6 +33,25 @@ parser.add_argument('--fine_tune_encoder', type=bool, default=True, help='fine-t
 parser.add_argument('--check_point', type=str, default=None, help='path to checkpoint, None if none')
 
 config = parser.parse_args()
+
+model = MSTS(config)
+
+
+# Custom dataloaders
+normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                                 std=[0.229, 0.224, 0.225])
+
+train_loader = torch.utils.data.DataLoader(
+    SmilesDataset(config.data_folder, config.data_name, 'TRAIN', transform=transforms.Compose([normalize])),
+    batch_size=config.batch_size, shuffle=True, num_workers=config.workers, pin_memory=True)
+
+val_loader = torch.utils.data.DataLoader(
+    SmilesDataset(config.data_folder, config.data_name, 'VAL', transform=transforms.Compose([normalize])),
+    batch_size=config.batch_size, shuffle=True, num_workers=config.workers, pin_memory=True)
+
+
+model.train(train_loader)
+
 
 
 
