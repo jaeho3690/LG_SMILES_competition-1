@@ -173,7 +173,7 @@ def create_input_files(train_dir,train_pickle_dir,output_folder,test_dir,sample_
 
             with open(output_folder/ f'{split}_SMILES_SEQUENCE_LENS_{base_filename}.json', 'w') as j:
                 json.dump(sequence_lens, j)
-    create_test_files(submission_csv_dir,base_filename,test_dir,output_folder)
+    create_test_files(sample_submission_csv,base_filename,test_dir,output_folder)
 
 def create_test_files(submission_csv_dir,base_filename,test_dir,output_folder):
     """Create hdf5 format test dataset"""
