@@ -12,7 +12,7 @@ class MSTS:
         # self._data_folder = config.data_folder
         # self._data_name = config.data_name
 
-        self._vocab_size = 50
+        self._vocab_size = 70
         self._emb_dim = config.emb_dim
         self._attention_dim = config.attention_dim
         self._decoder_dim = config.decoder_dim
@@ -75,15 +75,15 @@ class MSTS:
 
         loss = None
 
-        for i, (imgs, caps, caplens) in enumerate(train_loader):
+        for i, (imgs, sequence, sequence_lens) in enumerate(train_loader):
             print(i,end='\r')
             imgs = imgs.to(self._device)
-            caps = caps.to(self._device)
-            caplens = caplens.to(self._device)
+            sequence = sequence.to(self._device)
+            sequence_lens = sequence_lens.to(self._device)
 
             # Forward prop.
             imgs = self._encoder(imgs)
-            predictions, caps_sorted, decode_lengths, alphas, sort_ind = self._decoder(imgs, caps, caplens)
+            predictions, caps_sorted, decode_lengths, alphas, sort_ind = self._decoder(imgs, sequence, sequence_lens)
 
             # Since we decoded starting with <start>, the targets are all words after <start>, up to <end>
             targets = caps_sorted[:, 1:]

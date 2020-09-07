@@ -181,6 +181,8 @@ class DecoderWithAttention(nn.Module):
         encoder_out = encoder_out[sort_ind]
         encoded_captions = encoded_captions[sort_ind]
 
+        print(encoder_out.size)
+
         # Embedding
         # self.embedding = nn.Embedding(vocab_size, embed_dim)
         # torch.nn.Embedding(num_embeddings, embedding_dim)
