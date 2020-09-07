@@ -64,13 +64,13 @@ def create_input_files(train_dir,train_pickle_dir,output_folder,min_token_freq,m
         train_csv_dir: Directory of train csv directory
         output_folder: Directory to save files
         min_token_freq: token that occurs less frequently than this threshold are binned as <unk>s
-        max_len: Maximum Length of smiles_caption. The maximum length of smiles_caption
+        max_len: Maximum Length of smiles_sequence. The maximum length of smiles_sequence
     """
     df = pd.read_pickle(train_pickle_dir)
 
-    df = df.sample(n=10000)
-    df.reset_index(inplace=True)
-    print(df.head())
+    #df = df.sample(n=10000)
+    #df.reset_index(inplace=True)
+    #print(df.head())
     # Read image paths and SMILES for each image
     train_image_paths = []
     train_image_smiles = []
@@ -83,7 +83,7 @@ def create_input_files(train_dir,train_pickle_dir,output_folder,min_token_freq,m
 
     for index in tqdm(df.index,desc='Looping index'):
         try:
-            smiles_caption=[]
+            smiles_sequence=[]
             for token in df.loc[index,'SMILES_TOKEN']:
                 # Update token frequency
                 token_freq.update(token)
@@ -91,7 +91,7 @@ def create_input_files(train_dir,train_pickle_dir,output_folder,min_token_freq,m
             if len(df.loc[index,'SMILES'])==0:
                 continue
 
-            smiles_caption.append(df.loc[index,'SMILES'])
+            smiles_sequence.append(df.loc[index,'SMILES'])
 
             path = train_dir / df.loc[index,'file_name']
 
@@ -100,13 +100,15 @@ def create_input_files(train_dir,train_pickle_dir,output_folder,min_token_freq,m
 
             if  split_location in {'train'}:
                 train_image_paths.append(path)
-                train_image_smiles.append(smiles_caption)
+                train_image_smiles.append(smiles_sequence)
             elif split_location in {'val'}:
                 val_image_paths.append(path)
-                val_image_smiles.append(smiles_caption)
+                val_image_smiles.append(smiles_sequence)
             elif split_location in {'test'}:
                 test_image_paths.append(path)
-                test_image_smiles.append(smiles_caption)
+                test_image_smiles.append(smiles_sequence)
+        except KeyboardInterrupt:
+            raise
         except:
             continue
 
@@ -130,7 +132,7 @@ def create_input_files(train_dir,train_pickle_dir,output_folder,min_token_freq,m
         json.dump(token_map,j)
         print(f'Saved TOKENMAP_{base_filename}.json')
     
-    for impaths, smiles_captions, split in [(train_image_paths, train_image_smiles, 'TRAIN'),
+    for impaths, smiles_sequences, split in [(train_image_paths, train_image_smiles, 'TRAIN'),
                                    (val_image_paths, val_image_smiles, 'VAL'),
                                    (test_image_paths, test_image_smiles, 'TEST')]:
 
@@ -138,10 +140,10 @@ def create_input_files(train_dir,train_pickle_dir,output_folder,min_token_freq,m
             # Create dataset inside HDF5 file to store images
             images = h.create_dataset('images', (len(impaths), 3, 256, 256), dtype='uint8')
 
-            print(f"\nReading {split} images and captions, storing to file...\n")
+            print(f"\nReading {split} images and sequences, storing to file...\n")
 
-            enc_captions = []
-            caplens = []
+            enc_tokens = []
+            sequence_lens = []
 
             for i, path in enumerate(tqdm(impaths)):
                 try:
@@ -156,28 +158,28 @@ def create_input_files(train_dir,train_pickle_dir,output_folder,min_token_freq,m
                     # Save image to HDF5 file
                     images[i] = img
 
-                    smiles_caption = smiles_captions[i]
-                    for j, c in enumerate(smiles_caption):
+                    smiles_sequence = smiles_sequences[i]
+                    for j, s in enumerate(smiles_sequence):
 
-                        # Encode captions
-                        enc_c = [token_map['<start>']] + [token_map.get(token, token_map['<unk>']) for token in c] + [
-                            token_map['<end>']] + [token_map['<pad>']] * (max_len - len(c))
-                        # Find caption lengths
-                        c_len = len(c) + 2
+                        # Encode sequences
+                        enc_s = [token_map['<start>']] + [token_map.get(token, token_map['<unk>']) for token in s] + [
+                            token_map['<end>']] + [token_map['<pad>']] * (max_len - len(s))
+                        # Find sequence lengths
+                        s_len = len(s) + 2
 
-                        enc_captions.append(enc_c)
-                        caplens.append(c_len)
+                        enc_tokens.append(enc_s)
+                        sequence_lens.append(s_len)
                 except:
                     continue
             # Sanity check
-            assert images.shape[0] == len(enc_captions) == len(caplens)
+            assert images.shape[0] == len(enc_tokens) == len(sequence_lens)
 
-            # Save encoded captions and their lengths to JSON files
-            with open(output_folder/ f'{split}_SMILES_CAPTIONS_{base_filename}.json', 'w') as j:
-                json.dump(enc_captions, j)
+            # Save encoded sequences and their lengths to JSON files
+            with open(output_folder/ f'{split}_SMILES_SEQUENCES_{base_filename}.json', 'w') as j:
+                json.dump(enc_tokens, j)
 
-            with open(output_folder/ f'{split}_SMILES_CAPLENS_{base_filename}.json', 'w') as j:
-                json.dump(caplens, j)
+            with open(output_folder/ f'{split}_SMILES_SEQUENCE_LENS_{base_filename}.json', 'w') as j:
+                json.dump(sequence_lens, j)
 
 
 
