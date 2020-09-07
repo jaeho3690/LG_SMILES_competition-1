@@ -18,7 +18,7 @@ from sklearn.model_selection import train_test_split
 import matplotlib.image as mpimg
 
 
-def train_test_split_df(data_dir,train_csv_dir,random_seed,train_size=0.8,val_size=0.25):
+def train_validation_split_df(data_dir,train_csv_dir,random_seed,train_size=0.8):
     """ Split images into train,test,val in the dataframe and save them to pickle
     Args:
         data_dir: Data directory
@@ -36,28 +36,25 @@ def train_test_split_df(data_dir,train_csv_dir,random_seed,train_size=0.8,val_si
     del df
 
     train_index = int(len(df_shuffled)*train_size)
-    val_index = int(train_index*val_size)
     df_train = df_shuffled.iloc[:train_index,:]
-    df_val = df_shuffled.iloc[train_index-val_index:train_index,:]
-    df_test = df_shuffled.iloc[train_index:,:]
+    df_val = df_shuffled.iloc[train_index:,:]
 
-    print(f'Training: {len(df_train)}, Validation: {len(df_val)}, Test: {len(df_test)}')
+    print(f'Training: {len(df_train)}, Validation: {len(df_val)}')
 
     # Set Column Value for split
     df_train.loc[:,'split']='train'
     df_val.loc[:,'split']='val'
-    df_test.loc[:,'split']='test'
 
-    df = pd.concat([df_train,df_val,df_test],axis=0)
+    df = pd.concat([df_train,df_val],axis=0)
 
-    del df_train,df_val,df_test
+    del df_train,df_val
 
     # Save to pickle file 
     df.to_pickle( data_dir /'train_modified.pkl')
     print(f"Saved as 'train_modified.pkl'")
 
 
-def create_input_files(train_dir,train_pickle_dir,output_folder,min_token_freq,max_len=75,random_seed=123):
+def create_input_files(train_dir,train_pickle_dir,output_folder,test_dir,sample_submission_csv,min_token_freq,max_len=75,random_seed=123):
     """ Creates input files for train, val, test data
     Args:
         train_dir: Directory of train image folder
@@ -68,16 +65,12 @@ def create_input_files(train_dir,train_pickle_dir,output_folder,min_token_freq,m
     """
     df = pd.read_pickle(train_pickle_dir)
 
-    #df = df.sample(n=10000)
-    #df.reset_index(inplace=True)
-    #print(df.head())
+
     # Read image paths and SMILES for each image
     train_image_paths = []
     train_image_smiles = []
     val_image_paths = []
     val_image_smiles = []
-    test_image_paths = []
-    test_image_smiles = []
     token_freq= Counter()
 
 
@@ -104,18 +97,16 @@ def create_input_files(train_dir,train_pickle_dir,output_folder,min_token_freq,m
             elif split_location in {'val'}:
                 val_image_paths.append(path)
                 val_image_smiles.append(smiles_sequence)
-            elif split_location in {'test'}:
-                test_image_paths.append(path)
-                test_image_smiles.append(smiles_sequence)
+
         except KeyboardInterrupt:
             raise
         except:
+            print(f"was not able to process {index}")
             continue
 
     # Sanity Check
     assert len(train_image_paths) == len(train_image_smiles)
     assert len(val_image_paths) == len(val_image_smiles)
-    assert len(test_image_paths) == len(test_image_smiles)
 
     # Create token map
     tokens = [t for t in token_freq.keys() if token_freq[t] > min_token_freq]
@@ -133,8 +124,7 @@ def create_input_files(train_dir,train_pickle_dir,output_folder,min_token_freq,m
         print(f'Saved TOKENMAP_{base_filename}.json')
     
     for impaths, smiles_sequences, split in [(train_image_paths, train_image_smiles, 'TRAIN'),
-                                   (val_image_paths, val_image_smiles, 'VAL'),
-                                   (test_image_paths, test_image_smiles, 'TEST')]:
+                                   (val_image_paths, val_image_smiles, 'VAL')]:
 
         with h5py.File(output_folder / f"{split}_IMAGES_{base_filename}.hdf5", 'w') as h:
             # Create dataset inside HDF5 file to store images
@@ -169,7 +159,10 @@ def create_input_files(train_dir,train_pickle_dir,output_folder,min_token_freq,m
 
                         enc_tokens.append(enc_s)
                         sequence_lens.append(s_len)
+                except KeyboardInterrupt:
+                    raise
                 except:
+                    print(f'{path} was not processed')
                     continue
             # Sanity check
             assert images.shape[0] == len(enc_tokens) == len(sequence_lens)
@@ -180,9 +173,39 @@ def create_input_files(train_dir,train_pickle_dir,output_folder,min_token_freq,m
 
             with open(output_folder/ f'{split}_SMILES_SEQUENCE_LENS_{base_filename}.json', 'w') as j:
                 json.dump(sequence_lens, j)
+    create_test_files(submission_csv_dir,base_filename,test_dir,output_folder)
 
+def create_test_files(submission_csv_dir,base_filename,test_dir,output_folder):
+    """Create hdf5 format test dataset"""
+    print('Creating TEST FILES')
+    submission_df =pd.read_csv(submission_csv_dir)
+    test_image_paths = submission_df['file_name'].tolist()
 
+    with h5py.File(output_folder / f"TEST_IMAGES_{base_filename}.hdf5", 'w') as h:
+        # Create dataset inside HDF5 file to store images
+        images = h.create_dataset('images', (len(test_image_paths), 3, 256, 256), dtype='uint8')
 
+        print(f"\nReading TEST images and sequences, storing to file...\n")
+
+        for i, path in enumerate(tqdm(test_image_paths)):
+            try:
+                # Read images
+                img = Image.open(test_dir / test_image_paths[i])
+                img= img.resize((256,256))
+                img = np.array(img)
+                img = np.rollaxis(img, 2, 0)
+                assert img.shape == (3, 256, 256)
+                assert np.max(img) <= 255
+
+                # Save image to HDF5 file
+                images[i] = img
+            except KeyboardInterrupt:
+                raise
+            except:
+                print(f'{path} was not processed')
+                continue
+
+    print('TEST FILE SAVED')
 
 def split_to_token(word,window=1):
     """ Split string into tokens with given window size
