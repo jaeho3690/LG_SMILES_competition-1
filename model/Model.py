@@ -52,7 +52,7 @@ class MSTS:
         if torch.cuda.device_count() > 1:
             print("Let's use", torch.cuda.device_count(), "GPUs!")
             self._encoder = nn.DataParallel(self._encoder)
-            self._decoder = nn.DataParallel(self._decoder)
+        #    self._decoder = nn.DataParallel(self._decoder)
         self._criterion = nn.CrossEntropyLoss().to(self._device)
 
     def _clip_gradient(self, optimizer, grad_clip):
@@ -90,9 +90,9 @@ class MSTS:
 
             # Remove timesteps that we didn't decode at, or are pads
             # pack_padded_sequence is an easy trick to do this
-            total_length = decode_lengths.size(1)
-            predictions = pack_padded_sequence(predictions, decode_lengths, batch_first=True, total_length=total_length).data
-            targets = pack_padded_sequence(targets, decode_lengths, batch_first=True, total_length=total_length).data
+            # total_length = decode_lengths.size(1)
+            predictions = pack_padded_sequence(predictions, decode_lengths, batch_first=True).data#, total_length=total_length).data
+            targets = pack_padded_sequence(targets, decode_lengths, batch_first=True).data#, total_length=total_length).data
 
             # Calculate loss
             loss = self._criterion(predictions, targets)
