@@ -40,7 +40,7 @@ class MSTS:
 
         self._model_save_path = config.model_save_path
         self._model_load_path = config.model_load_path
-        self._model_load_num = config.mode_load_num
+        self._model_load_num = config.model_load_num
 
         self._model_name = self._model_name_maker()
 
@@ -220,10 +220,11 @@ class MSTS:
 
     def _accuracy_calcluator(self, prediction: np.array, target: np.array, decode_len: np.array):
         mean_accr = 0
+        prediction = np.argmax(prediction,2)
         for itr, (p, t, l) in enumerate(zip(prediction, target, decode_len)):
             accr = 0
-            for i in l:
-                if p[i] == p[t]:
+            for i in range(l):
+                if np.argmax(p[i]) == t[i]:
                     accr = accr + (1 - accr) / (i+1)
             mean_accr = mean_accr + (accr - mean_accr) / (itr+1)
 

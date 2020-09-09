@@ -21,7 +21,7 @@ parser.add_argument('--device', type=str, default='cuda', help='sets device for 
 parser.add_argument('--cudnn_benchmark', type=bool, default=True, help='set to true only if inputs to model are fixed size; otherwise lot of computational overhead')
 
 parser.add_argument('--start_epoch', type=int, default=0, help='number of start epoch')
-parser.add_argument('--epochs', type=int, default=120, help='number of epochs to train for')
+parser.add_argument('--epochs', type=int, default=50, help='number of epochs to train for')
 parser.add_argument('--epochs_since_improvement', type=int, default=0, help="keeps track of number of epochs since there's been an improvement in validation BLEU")
 parser.add_argument('--batch_size', type=int, default=384, help='batch size')
 parser.add_argument('--workers', type=int, default=1, help='for data-loading; right now, only 1 works with h5py')
@@ -58,6 +58,7 @@ if config.work_type == 'train':
     log_index = ['t_loss','t_accr','v_loss','v_accr']
     logger(log_index)
     for itr in range(config.epochs):
+        print('epoch:', itr)
         t_l, t_a = model.train(train_loader)
         v_l, v_a = model.validation(val_loader)
         model.model_save(save_num=itr)
