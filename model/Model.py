@@ -7,6 +7,10 @@ from torch.nn.utils.rnn import pack_padded_sequence
 
 from model.Network import Encoder, DecoderWithAttention
 
+import numpy as np
+import asyncio
+import os
+
 class MSTS:
     def __init__(self, config):
         # self._data_folder = config.data_folder
@@ -32,7 +36,12 @@ class MSTS:
         self._best_bleu4 = config.best_bleu4
         self._print_freq = config.print_freq
         self._fine_tune_encoder = config.fine_tune_encoder
-        # self._checkpoint = config.checkpoint
+
+        self._model_save_path = config.model_save_path
+        self._model_load_path = config.model_load_path
+        self._model_load_num = config.mode_load_num
+
+        self._model_name = self._model_name_maker()
 
         self._decoder = DecoderWithAttention(attention_dim=self._attention_dim,
                                              embed_dim=self._emb_dim,
@@ -55,6 +64,7 @@ class MSTS:
         #    self._decoder = nn.DataParallel(self._decoder)
         self._criterion = nn.CrossEntropyLoss().to(self._device)
 
+
     def _clip_gradient(self, optimizer, grad_clip):
         """
         Clips gradients computed during backpropagation to avoid explosion of gradients.
@@ -73,10 +83,10 @@ class MSTS:
         self._encoder.train()
         self._decoder.train()
 
-        loss = None
+        mean_loss = 0
+        mean_accuracy = 0
 
         for i, (imgs, sequence, sequence_lens) in enumerate(train_loader):
-            print(i,end='\r')
             imgs = imgs.to(self._device)
             sequence = sequence.to(self._device)
             sequence_lens = sequence_lens.to(self._device)
@@ -85,17 +95,30 @@ class MSTS:
             imgs = self._encoder(imgs)
             predictions, caps_sorted, decode_lengths, alphas, sort_ind = self._decoder(imgs, sequence, sequence_lens)
 
+            # if i%50 == 0:
+            #     print('step:',i)
+            #     print('predictions:', torch.argmax(predictions.detach().cpu(), -1).numpy()[0])
+            #     print('target:', caps_sorted.detach().cpu().numpy()[0])
+
             # Since we decoded starting with <start>, the targets are all words after <start>, up to <end>
             targets = caps_sorted[:, 1:]
 
+            # Calculate accuracy
+            accr = self._accuracy_calcluator(predictions.detach().cpu().numpy(),
+                                             targets.detach().cpu().numpy(),
+                                             np.array(decode_lengths))
+
+            mean_accuracy = mean_accuracy + (accr - mean_accuracy) / (i+1)
+
+
             # Remove timesteps that we didn't decode at, or are pads
             # pack_padded_sequence is an easy trick to do this
-            # total_length = decode_lengths.size(1)
-            predictions = pack_padded_sequence(predictions, decode_lengths, batch_first=True).data#, total_length=total_length).data
-            targets = pack_padded_sequence(targets, decode_lengths, batch_first=True).data#, total_length=total_length).data
+            predictions = pack_padded_sequence(predictions, decode_lengths, batch_first=True).data
+            targets = pack_padded_sequence(targets, decode_lengths, batch_first=True).data
 
             # Calculate loss
             loss = self._criterion(predictions, targets)
+            mean_loss = mean_loss + (loss - mean_loss)/(i+1)
 
             # Back prop.
             self._decoder_optimizer.zero_grad()
@@ -112,23 +135,99 @@ class MSTS:
             self._decoder_optimizer.step()
             self._encoder_optimizer.step()
 
-        return loss
+        return mean_loss, mean_accuracy
+
+
+    def validation(self, val_loader):
+        self._encoder.eval()
+        self._decoder.eval()
+
+        mean_loss = 0
+        mean_accuracy = 0
+
+        for i, (imgs, sequence, sequence_lens) in enumerate(val_loader):
+            imgs = imgs.to(self._device)
+            sequence = sequence.to(self._device)
+            sequence_lens = sequence_lens.to(self._device)
+
+            imgs = self._encoder(imgs)
+            predictions, caps_sorted, decode_lengths, _, _ = self._decoder(imgs, sequence, sequence_lens)
+
+            targets = caps_sorted[:, 1:]
+
+            accr = self._accuracy_calcluator(predictions.detach().cpu().numpy(),
+                                             targets.detach().cpu().numpy(),
+                                             np.array(decode_lengths))
+
+            mean_accuracy = mean_accuracy + (accr - mean_accuracy) / (i + 1)
+
+            predictions = pack_padded_sequence(predictions, decode_lengths, batch_first=True).data
+            targets = pack_padded_sequence(targets, decode_lengths, batch_first=True).data
+
+            loss = self._criterion(predictions, targets)
+            mean_loss = mean_loss + (loss - mean_loss) / (i + 1)
+
+        return mean_loss, mean_accuracy
+
+
+    def model_test(self, submission, test_loader):
+
+        self.model_load()
+        self._encoder.eval()
+        self._decoder.eval()
+
+        for i, (imgs, sequence, sequence_lens) in enumerate(test_loader):
+            imgs = imgs.to(self._device)
+            sequence = sequence.to(self._device)
+            sequence_lens = sequence_lens.to(self._device)
+
+            imgs = self._encoder(imgs)
+            predictions, _, _, _, _ = self._decoder(imgs, sequence, sequence_lens)
+            SMILES_sequence = torch.argmax(predictions.detach().cpu(), -1).numpy()
+            submission['SMILES'].loc[i] = SMILES_sequence
+
+        return submission
+
 
     def model_save(self, save_num):
         torch.save(
             self._decoder.state_dict(),
-            'graph_save/decoder{}.pkl'.format(str(save_num).zfill(3))
+            '{}/'.format(self._model_save_path)+self._model_name+'/decoder{}.pkl'.format(str(save_num).zfill(3))
         )
         torch.save(
             self._encoder.state_dict(),
-            'graph_save/encoder{}.pkl'.format(str(save_num).zfill(3))
+            '{}/'.format(self._model_save_path)+self._model_name+'/encoder{}.pkl'.format(str(save_num).zfill(3))
         )
 
 
-    def mode_load(self, load_num):
+    def model_load(self):
         self._decoder.load_state_dict(
-            torch.load('graph_save/decoder{}.pkl'.format(str(load_num).zfill(3)))
+            torch.load('{}/decoder{}.pkl'.format(self._model_load_path, str(self._model_load_num).zfill(3)))
         )
         self._encoder.load_state_dict(
-            torch.load('graph_save/encoder{}.pkl'.format(str(load_num).zfill(3)))
+            torch.load('{}/encoder{}.pkl'.format(self._model_load_path, str(self._model_load_num).zfill(3)))
         )
+
+
+    def _model_name_maker(self):
+        name = 'model-emb_dim_{}-attention_dim_{}-decoder_dim_{}-dropout_{}-batch_size_{}'.format(
+            self._emb_dim, self._attention_dim, self._decoder_dim, self._dropout, self._batch_size)
+
+        try:
+            os.mkdir(self._model_save_path + '/' + name)
+        except OSError:
+            pass
+
+        return name
+
+
+    def _accuracy_calcluator(self, prediction: np.array, target: np.array, decode_len: np.array):
+        mean_accr = 0
+        for itr, (p, t, l) in enumerate(zip(prediction, target, decode_len)):
+            accr = 0
+            for i in l:
+                if p[i] == p[t]:
+                    accr = accr + (1 - accr) / (i+1)
+            mean_accr = mean_accr + (accr - mean_accr) / (itr+1)
+
+        return mean_accr
