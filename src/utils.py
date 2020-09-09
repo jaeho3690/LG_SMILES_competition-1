@@ -222,14 +222,3 @@ def str2bool(v):
         return False
     else:
         raise argparse.ArgumentTypeError('Boolean value expected.')
-
-
-def csv_writer(file_name, write_data):
-    f = open(file_name, 'a', encoding='utf-8', newline='')
-    wr = csv.writer(f)
-    wr.writerow(write_data)
-    f.close()
-
-
-def logger(log_data):
-    csv_writer('log.csv', log_data)

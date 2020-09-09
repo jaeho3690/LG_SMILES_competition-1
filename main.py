@@ -1,5 +1,4 @@
 import os
-import yaml
 import argparse
 import torch
 import torchvision.transforms as transforms
@@ -7,7 +6,7 @@ import torchvision.transforms as transforms
 from model.Model import MSTS
 from src.datasets import SmilesDataset
 from src.config import input_data_dir, base_file_name, sample_submission_dir
-from src.utils import logger
+from utils import logger, make_directory
 
 parser = argparse.ArgumentParser()
 # parser.add_argument('--data_folder', type=str, default='home/jaeho_ubuntu/SMILES/data/input_data', help='folder with image data files saved')
@@ -46,12 +45,7 @@ normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
                                  std=[0.229, 0.224, 0.225])
 
 if config.work_type == 'train':
-    # make model save dir
-    try:
-        os.mkdir(config.model_save_path)
-        print(config.model_save_path + ' is generated!')
-    except OSError:
-        pass
+    make_directory(config.model_save_path)
 
     train_loader = torch.utils.data.DataLoader(
         SmilesDataset(input_data_dir, base_file_name, 'TRAIN', transform=transforms.Compose([normalize])),

@@ -6,6 +6,7 @@ from torch import nn
 from torch.nn.utils.rnn import pack_padded_sequence
 
 from model.Network import Encoder, DecoderWithAttention
+from utils import make_directory
 
 import numpy as np
 import asyncio
@@ -212,11 +213,7 @@ class MSTS:
     def _model_name_maker(self):
         name = 'model-emb_dim_{}-attention_dim_{}-decoder_dim_{}-dropout_{}-batch_size_{}'.format(
             self._emb_dim, self._attention_dim, self._decoder_dim, self._dropout, self._batch_size)
-
-        try:
-            os.mkdir(self._model_save_path + '/' + name)
-        except OSError:
-            pass
+        make_directory(self._model_save_path + '/' + name)
 
         return name
 
