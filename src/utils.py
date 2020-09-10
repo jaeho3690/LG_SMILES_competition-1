@@ -118,12 +118,19 @@ def create_input_files(train_dir,train_pickle_dir,output_folder,test_dir,sample_
     token_map['<pad>'] = 0
 
     print(token_map)
+    # Create reverse token map for decoding predicted sequence
+    reversed_token_map = dict((v, k) for k, v in token_map.items())
+
     base_filename = f'seed_{random_seed}_max{max_len}smiles'
 
     with open(output_folder / f'TOKENMAP_{base_filename}.json','w') as j:
         json.dump(token_map,j)
         print(f'Saved TOKENMAP_{base_filename}.json')
     
+    with open(output_folder / f'REVERSED_TOKENMAP_{base_filename}.json','w') as j:
+        json.dump(reversed_token_map,j)
+        print(f'Saved REVERSED_TOKENMAP_{base_filename}.json')
+
     for impaths, smiles_sequences, split in [(train_image_paths, train_image_smiles, 'TRAIN'),
                                    (val_image_paths, val_image_smiles, 'VAL')]:
 
