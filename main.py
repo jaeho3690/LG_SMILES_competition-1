@@ -5,8 +5,8 @@ import torchvision.transforms as transforms
 
 from model.Model import MSTS
 from src.datasets import SmilesDataset
-from src.config import input_data_dir, base_file_name, sample_submission_dir
-from utils import logger, make_directory
+from src.config import input_data_dir, base_file_name, sample_submission_dir, reversed_token_map_dir 
+from utils import logger, make_directory,load_reversed_token_map
 
 parser = argparse.ArgumentParser()
 # parser.add_argument('--data_folder', type=str, default='home/jaeho_ubuntu/SMILES/data/input_data', help='folder with image data files saved')
@@ -69,12 +69,13 @@ if config.work_type == 'train':
 elif config.work_type == 'test':
     import pandas as pd
     submission = pd.read_csv(sample_submission_dir)
+    reversed_token_map= load_reversed_token_map(reversed_token_map_dir)
 
     test_loader = torch.utils.data.DataLoader(
         SmilesDataset(input_data_dir, base_file_name, 'TEST', transform=transforms.Compose([normalize])),
         batch_size=config.batch_size, shuffle=False, num_worers=config.workers, pin_memory=True)
 
-    submission = model.model_test(submission, test_loader)
+    submission = model.model_test(submission, test_loader,reversed_token_map)
     submission.to_csv('sample_submission.csv')
 
 
