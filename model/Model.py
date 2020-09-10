@@ -6,7 +6,7 @@ from torch import nn
 from torch.nn.utils.rnn import pack_padded_sequence
 
 from model.Network import Encoder, DecoderWithAttention
-from utils import make_directory
+from utils import make_directory,decode_predicted_sequences
 
 import numpy as np
 import asyncio
@@ -168,11 +168,12 @@ class MSTS:
         return mean_loss, mean_accuracy
 
 
-    def model_test(self, submission, test_loader):
+    def model_test(self, submission, test_loader, reversed_token_map):
 
         self.model_load()
         self._encoder.eval()
         self._decoder.eval()
+
 
         for i, (imgs, sequence, sequence_lens) in enumerate(test_loader):
             imgs = imgs.to(self._device)
@@ -181,8 +182,9 @@ class MSTS:
 
             imgs = self._encoder(imgs)
             predictions, _, _, _, _ = self._decoder(imgs, sequence, sequence_lens)
-            SMILES_sequence = torch.argmax(predictions.detach().cpu(), -1).numpy()
-            submission['SMILES'].loc[i] = SMILES_sequence
+            SMILES_predicted_sequence = list(torch.argmax(predictions.detach().cpu(), -1).numpy())
+            decoded_sequences = decode_predicted_sequences(SMILES_predicted_sequence,reversed_token_map)
+            submission['SMILES'].loc[i] = decoded_sequences
 
         return submission
 
