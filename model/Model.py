@@ -106,9 +106,7 @@ class MSTS:
 
             # Calculate accuracy
             accr = self._accuracy_calcluator(predictions.detach().cpu().numpy(),
-                                             targets.detach().cpu().numpy(),
-                                             np.array(decode_lengths))
-
+                                             targets.detach().cpu().numpy())
             mean_accuracy = mean_accuracy + (accr - mean_accuracy) / (i+1)
 
 
@@ -157,8 +155,7 @@ class MSTS:
             targets = caps_sorted[:, 1:]
 
             accr = self._accuracy_calcluator(predictions.detach().cpu().numpy(),
-                                             targets.detach().cpu().numpy(),
-                                             np.array(decode_lengths))
+                                             targets.detach().cpu().numpy())
 
             mean_accuracy = mean_accuracy + (accr - mean_accuracy) / (i + 1)
 
@@ -218,14 +215,8 @@ class MSTS:
         return name
 
 
-    def _accuracy_calcluator(self, prediction: np.array, target: np.array, decode_len: np.array):
-        mean_accr = 0
+    def _accuracy_calcluator(self, prediction: np.array, target: np.array):
         prediction = np.argmax(prediction,2)
-        for itr, (p, t, l) in enumerate(zip(prediction, target, decode_len)):
-            accr = 0
-            for i in range(l):
-                if np.argmax(p[i]) == t[i]:
-                    accr = accr + (1 - accr) / (i+1)
-            mean_accr = mean_accr + (accr - mean_accr) / (itr+1)
+        accr_matrix = np.array(prediction==target, dtype=int)
 
-        return mean_accr
+        return accr_matrix.mean()
