@@ -55,7 +55,7 @@ def train_validation_split_df(data_dir,train_csv_dir,random_seed,train_size=0.8)
     print(f"Saved as 'train_modified.pkl'")
 
 
-def create_input_files(train_dir,train_pickle_dir,output_folder,test_dir,sample_submission_csv,min_token_freq,max_len=75,random_seed=123):
+def create_input_files(train_dir,train_pickle_dir,output_folder,min_token_freq,max_len=75,random_seed=123):
     """ Creates input files for train, val, test data
     Args:
         train_dir: Directory of train image folder
@@ -181,15 +181,15 @@ def create_input_files(train_dir,train_pickle_dir,output_folder,test_dir,sample_
 
             with open(output_folder/ f'{split}_SMILES_SEQUENCE_LENS_{base_filename}.json', 'w') as j:
                 json.dump(sequence_lens, j)
-    create_test_files(sample_submission_csv,base_filename,test_dir,output_folder)
 
-def create_test_files(submission_csv_dir,base_filename,test_dir,output_folder):
+
+def create_test_files(submission_csv_dir,test_dir,output_folder):
     """Create hdf5 format test dataset"""
     print('Creating TEST FILES')
     submission_df =pd.read_csv(submission_csv_dir)
     test_image_paths = submission_df['file_name'].tolist()
 
-    with h5py.File(output_folder / f"TEST_IMAGES_{base_filename}.hdf5", 'w') as h:
+    with h5py.File(output_folder / f"TEST_LG_IMAGES.hdf5", 'w') as h:
         # Create dataset inside HDF5 file to store images
         images = h.create_dataset('images', (len(test_image_paths), 3, 256, 256), dtype='uint8')
 
@@ -211,7 +211,7 @@ def create_test_files(submission_csv_dir,base_filename,test_dir,output_folder):
                 raise
             except:
                 print(f'{path} was not processed')
-                continue
+                break
 
     print('TEST FILE SAVED')
 
