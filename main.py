@@ -69,10 +69,10 @@ if config.work_type == 'train':
 elif config.work_type == 'test':
     import pandas as pd
     submission = pd.read_csv(sample_submission_dir)
-
+    print('Running Test')
     test_loader = torch.utils.data.DataLoader(
-        SmilesDataset(input_data_dir, base_file_name=None, 'TEST', transform=transforms.Compose([normalize])),
-        batch_size=config.batch_size, shuffle=False, num_worers=config.workers, pin_memory=True)
+        SmilesDataset(input_data_dir, base_file_name= None, split= 'TEST', transform=transforms.Compose([normalize])),
+        batch_size=config.batch_size, shuffle=False, num_workers=config.workers, pin_memory=True)
 
     submission = model.model_test(submission, test_loader)
     submission.to_csv('sample_submission.csv')
