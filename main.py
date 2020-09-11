@@ -69,6 +69,7 @@ if config.work_type == 'train':
 elif config.work_type == 'test':
     import pandas as pd
     submission = pd.read_csv(sample_submission_dir)
+    reversed_token_map= load_reversed_token_map(reversed_token_map_dir)
     test_loader = torch.utils.data.DataLoader(
         SmilesDataset(input_data_dir, base_file_name= None, split= 'TEST', transform=transforms.Compose([normalize])),
         batch_size=config.batch_size, shuffle=False, num_workers=config.workers, pin_memory=True)
