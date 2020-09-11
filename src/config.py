@@ -14,3 +14,6 @@ base_file_name = 'seed_123_max75smiles'
 
 # Hyper parameter for generating data
 random_seed = 123
+
+# Reversed_token_file
+reversed_token_map_dir = input_data_dir/ f'REVERSED_TOKENMAP_{base_filename}.json'
