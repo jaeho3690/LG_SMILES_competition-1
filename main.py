@@ -71,7 +71,7 @@ elif config.work_type == 'test':
     submission = pd.read_csv(sample_submission_dir)
 
     test_loader = torch.utils.data.DataLoader(
-        SmilesDataset(input_data_dir, base_file_name, 'TEST', transform=transforms.Compose([normalize])),
+        SmilesDataset(input_data_dir, base_file_name=None, 'TEST', transform=transforms.Compose([normalize])),
         batch_size=config.batch_size, shuffle=False, num_worers=config.workers, pin_memory=True)
 
     submission = model.model_test(submission, test_loader)
