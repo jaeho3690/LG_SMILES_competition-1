@@ -9,8 +9,7 @@ from src.config import input_data_dir, base_file_name, sample_submission_dir, re
 from utils import logger, make_directory,load_reversed_token_map
 
 parser = argparse.ArgumentParser()
-# parser.add_argument('--data_folder', type=str, default='home/jaeho_ubuntu/SMILES/data/input_data', help='folder with image data files saved')
-# parser.add_argument('--data_name', type=str, default='seed_123_max75smiles', help='csv file that contain information about image data')
+
 parser.add_argument('--work_type', type=str, default='train', help="choose work type 'train' or 'test'")
 
 parser.add_argument('--emb_dim', type=int, default=256, help='dimension of word embeddings')
@@ -71,7 +70,7 @@ elif config.work_type == 'test':
     reversed_token_map= load_reversed_token_map(reversed_token_map_dir)
     test_loader = torch.utils.data.DataLoader(
         SmilesDataset(input_data_dir, base_file_name= None, split= 'TEST', transform=transforms.Compose([normalize])),
-        batch_size=config.batch_size, shuffle=False, num_workers=config.workers, pin_memory=True)
+        batch_size=1, shuffle=False, num_workers=config.workers, pin_memory=True)
 
     model.model_load()
     print('model loaded')

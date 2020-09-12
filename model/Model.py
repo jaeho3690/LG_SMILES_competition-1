@@ -100,16 +100,9 @@ class MSTS:
             sequence = sequence.to(self._device)
             sequence_lens = sequence_lens.to(self._device)
 
-            # Forward prop.
             imgs = self._encoder(imgs)
             predictions, caps_sorted, decode_lengths, alphas, sort_ind = self._decoder(imgs, sequence, sequence_lens)
 
-            # if i%50 == 0:
-            #     print('step:',i)
-            #     print('predictions:', torch.argmax(predictions.detach().cpu(), -1).numpy()[0])
-            #     print('target:', caps_sorted.detach().cpu().numpy()[0])
-
-            # Since we decoded starting with <start>, the targets are all words after <start>, up to <end>
             targets = caps_sorted[:, 1:]
 
             # Calculate accuracy
@@ -117,9 +110,6 @@ class MSTS:
                                              targets.detach().cpu().numpy())
             mean_accuracy = mean_accuracy + (accr - mean_accuracy) / (i+1)
 
-
-            # Remove timesteps that we didn't decode at, or are pads
-            # pack_padded_sequence is an easy trick to do this
             predictions = pack_padded_sequence(predictions, decode_lengths, batch_first=True).data
             targets = pack_padded_sequence(targets, decode_lengths, batch_first=True).data
 
@@ -188,10 +178,8 @@ class MSTS:
             imgs = self._encoder(imgs)
             predictions = self._decoder(imgs)
             SMILES_predicted_sequence = list(torch.argmax(predictions.detach().cpu(), -1).numpy())[0]
-            # print(SMILES_predicted_sequence)
             decoded_sequences = decode_predicted_sequences(SMILES_predicted_sequence,reversed_token_map)
-            # submission['SMILES'].loc[i] = decoded_sequences
-            print(decoded_sequences)
+            submission['SMILES'].loc[i] = decoded_sequences
             del (predictions)
 
         return submission
