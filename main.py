@@ -73,6 +73,8 @@ elif config.work_type == 'test':
         SmilesDataset(input_data_dir, base_file_name= None, split= 'TEST', transform=transforms.Compose([normalize])),
         batch_size=config.batch_size, shuffle=False, num_workers=config.workers, pin_memory=True)
 
+    model.model_load()
+    print('model loaded')
     submission = model.model_test(submission, test_loader,reversed_token_map)
     submission.to_csv('sample_submission.csv')
 

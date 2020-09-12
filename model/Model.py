@@ -186,11 +186,12 @@ class MSTS:
             imgs = imgs.to(self._device)
 
             imgs = self._encoder(imgs)
-            predictions, _, _, _, _ = self._decoder(imgs)
-            SMILES_predicted_sequence = list(torch.argmax(predictions.detach().cpu(), -1).numpy())
+            predictions = self._decoder(imgs)
+            SMILES_predicted_sequence = list(torch.argmax(predictions.detach().cpu(), -1).numpy())[0]
+            # print(SMILES_predicted_sequence)
             decoded_sequences = decode_predicted_sequences(SMILES_predicted_sequence,reversed_token_map)
-            submission['SMILES'].loc[i] = decoded_sequences
-
+            # submission['SMILES'].loc[i] = decoded_sequences
+            print(decoded_sequences)
             del (predictions)
 
         return submission

@@ -114,7 +114,18 @@ class PredictiveDecoder(nn.Module):
         self.f_beta = nn.Linear(decoder_dim, encoder_dim)  # linear layer to create a sigmoid-activated gate
         self.sigmoid = nn.Sigmoid()
         self.fc = nn.Linear(decoder_dim, vocab_size)  # linear layer to find scores over vocabulary
-        self.init_weights()  # initialize some layers with the uniform distribution
+
+    def init_hidden_state(self, encoder_out):
+        """
+        Creates the initial hidden and cell states for the decoder's LSTM based on the encoded images.
+
+        :param encoder_out: encoded images, a tensor of dimension (batch_size, num_pixels, encoder_dim)
+        :return: hidden state, cell state
+        """
+        mean_encoder_out = encoder_out.mean(dim=1)
+        h = self.init_h(mean_encoder_out)  # (batch_size, decoder_dim)
+        c = self.init_c(mean_encoder_out)
+        return h, c
 
 
     def forward(self, encoder_out, decode_lengths=70):
@@ -142,20 +153,20 @@ class PredictiveDecoder(nn.Module):
         #       embedding_dim: the size of each embedding vector
         # embeddings = self.embedding(encoded_captions)  # (batch_size, max_caption_length, embed_dim)
 
-        start_tockens = torch.ones(batch_size, 1) * 68
-        start_tockens.to(device)
+        start_tockens = torch.ones(batch_size, dtype=torch.long).to(device) * 68
         embeddings = self.embedding(start_tockens)
+        # start_tockens.to(device)
 
         # Initialize LSTM state
         h, c = self.init_hidden_state(encoder_out)  # (batch_size, decoder_dim)
 
         # Create tensors to hold word predicion scores and alphas
-        predictions = torch.zeros(batch_size, max(decode_lengths), vocab_size).to(device)
+        predictions = torch.zeros(batch_size, decode_lengths, vocab_size).to(device)
 
         # At each time-step, decode by
         # attention-weighing the encoder's output based on the decoder's previous hidden state output
         # then generate a new word in the decoder with the previous word and the attention weighted encoding
-        for t in range(max(decode_lengths)):
+        for t in range(decode_lengths):
 
             # self.attention = Attention(encoder_dim, decoder_dim, attention_dim)
             #   input: encoder_out, decoder_hidden
@@ -169,6 +180,8 @@ class PredictiveDecoder(nn.Module):
             # self.decode_step = nn.LSTMCell(embed_dim + encoder_dim, decoder_dim, bias=True)
             #   input: embeddings, (hidden, cell) -> embeddings
             #   output: hidden, cell
+            # print('embeddings:', embeddings.shape)
+            # print('attention_weighted_encoding:', attention_weighted_encoding.shape)
             h, c = self.decode_step(
                 torch.cat([embeddings, attention_weighted_encoding], dim=1),
                 (h, c))  # (batch_size_t, decoder_dim)
@@ -177,6 +190,9 @@ class PredictiveDecoder(nn.Module):
 
             predictions[:, t, :] = preds
             embeddings = self.embedding(torch.argmax(preds, -1))
+            # print('preds:',preds.shape)
+            # print('embeddings:',embeddings.shape)
+
 
         return predictions
 
@@ -309,6 +325,9 @@ class DecoderWithAttention(nn.Module):
             gate = self.sigmoid(self.f_beta(h[:batch_size_t]))  # gating scalar, (batch_size_t, encoder_dim)
             attention_weighted_encoding = gate * attention_weighted_encoding
 
+            # print('embeddings:', embeddings[:batch_size_t,t,:].shape)
+            # print('attention_weighted_encoding:', attention_weighted_encoding.shape)
+
             # self.decode_step = nn.LSTMCell(embed_dim + encoder_dim, decoder_dim, bias=True)
             #   input: embeddings, (hidden, cell) -> embeddings
             #   output: hidden, cell
@@ -317,7 +336,7 @@ class DecoderWithAttention(nn.Module):
                 (h[:batch_size_t], c[:batch_size_t]))  # (batch_size_t, decoder_dim)
 
             preds = self.fc(self.dropout(h))  # (batch_size_t, vocab_size)
-
+            print('preds:',preds.shape)
             predictions[:batch_size_t, t, :] = preds
 
             alphas[:batch_size_t, t, :] = alpha

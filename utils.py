@@ -36,6 +36,7 @@ def decode_predicted_sequences(predicted_sequence_list,reversed_token_map):
     """
     predicted_sequence_str = ""
     for e in predicted_sequence_list:
+        e = str(e)
         if reversed_token_map[e]=='<unk>':
             continue
         elif reversed_token_map[e] in {'<end>','<pad>'}:
@@ -43,7 +44,7 @@ def decode_predicted_sequences(predicted_sequence_list,reversed_token_map):
         else:
             predicted_sequence_str+=reversed_token_map[e]
     
-    return predicted_sequence_list
+    return predicted_sequence_str
 
 
 
