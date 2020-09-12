@@ -5,7 +5,7 @@ import torchvision.transforms as transforms
 from torch import nn
 from torch.nn.utils.rnn import pack_padded_sequence
 
-from model.Network import Encoder, DecoderWithAttention
+from model.Network import Encoder, DecoderWithAttention, PredictiveDecoder
 from utils import make_directory,decode_predicted_sequences
 
 import numpy as np
@@ -16,6 +16,7 @@ class MSTS:
     def __init__(self, config):
         # self._data_folder = config.data_folder
         # self._data_name = config.data_name
+        self._work_type = config.work_type
 
         self._vocab_size = 70
         self._emb_dim = config.emb_dim
@@ -44,14 +45,21 @@ class MSTS:
 
         self._model_name = self._model_name_maker()
 
-        self._decoder = DecoderWithAttention(attention_dim=self._attention_dim,
-                                             embed_dim=self._emb_dim,
-                                             decoder_dim=self._decoder_dim,
-                                             vocab_size=self._vocab_size,
-                                             dropout=self._dropout)
-        self._decoder_optimizer = torch.optim.Adam(params=filter(lambda p: p.requires_grad,
+        if self._work_type == 'train':
+            self._decoder = DecoderWithAttention(attention_dim=self._attention_dim,
+                                                 embed_dim=self._emb_dim,
+                                                 decoder_dim=self._decoder_dim,
+                                                 vocab_size=self._vocab_size,
+                                                 dropout=self._dropout)
+            self._decoder_optimizer = torch.optim.Adam(params=filter(lambda p: p.requires_grad,
                                                            self._decoder.parameters()),
                                                            lr=self._decoder_lr)
+        elif self._work_type == 'test':
+            self._decoder = PredictiveDecoder(attention_dim=self._attention_dim,
+                                                 embed_dim=self._emb_dim,
+                                                 decoder_dim=self._decoder_dim,
+                                                 vocab_size=self._vocab_size)
+
         self._encoder = Encoder()
         self._encoder.fine_tune(self._fine_tune_encoder)
         self._encoder_optimizer = torch.optim.Adam(params=filter(lambda p: p.requires_grad,
@@ -117,7 +125,7 @@ class MSTS:
 
             # Calculate loss
             loss = self._criterion(predictions, targets)
-            mean_loss = mean_loss + (loss.det().item() - mean_loss)/(i+1)
+            mean_loss = mean_loss + (loss.detach().item() - mean_loss)/(i+1)
 
             # Back prop.
             self._decoder_optimizer.zero_grad()
@@ -174,14 +182,11 @@ class MSTS:
         self._encoder.eval()
         self._decoder.eval()
 
-
-        for i, (imgs, sequence, sequence_lens) in enumerate(test_loader):
+        for i, imgs in enumerate(test_loader):
             imgs = imgs.to(self._device)
-            sequence = sequence.to(self._device)
-            sequence_lens = sequence_lens.to(self._device)
 
             imgs = self._encoder(imgs)
-            predictions, _, _, _, _ = self._decoder(imgs, sequence, sequence_lens)
+            predictions, _, _, _, _ = self._decoder(imgs)
             SMILES_predicted_sequence = list(torch.argmax(predictions.detach().cpu(), -1).numpy())
             decoded_sequences = decode_predicted_sequences(SMILES_predicted_sequence,reversed_token_map)
             submission['SMILES'].loc[i] = decoded_sequences

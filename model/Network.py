@@ -85,6 +85,101 @@ class Attention(nn.Module):
 
         return attention_weighted_encoding, alpha
 
+class PredictiveDecoder(nn.Module):
+    def __init__(self, attention_dim, embed_dim, decoder_dim, vocab_size, encoder_dim=2048, dropout=1.):
+        """
+        :param attention_dim: size of attention network
+        :param embed_dim: embedding size
+        :param decoder_dim: size of decoder's RNN
+        :param vocab_size: size of vocabulary
+        :param encoder_dim: feature size of encoded images
+        :param dropout: dropout
+        """
+        super(PredictiveDecoder, self).__init__()
+
+        self.encoder_dim = encoder_dim
+        self.attention_dim = attention_dim
+        self.embed_dim = embed_dim
+        self.decoder_dim = decoder_dim
+        self.vocab_size = vocab_size
+        self.dropout = dropout
+
+        self.attention = Attention(encoder_dim, decoder_dim, attention_dim)  # attention network
+
+        self.embedding = nn.Embedding(vocab_size, embed_dim)  # embedding layer
+        self.dropout = nn.Dropout(p=self.dropout)
+        self.decode_step = nn.LSTMCell(embed_dim + encoder_dim, decoder_dim, bias=True)  # decoding LSTMCell
+        self.init_h = nn.Linear(encoder_dim, decoder_dim)  # linear layer to find initial hidden state of LSTMCell
+        self.init_c = nn.Linear(encoder_dim, decoder_dim)  # linear layer to find initial cell state of LSTMCell
+        self.f_beta = nn.Linear(decoder_dim, encoder_dim)  # linear layer to create a sigmoid-activated gate
+        self.sigmoid = nn.Sigmoid()
+        self.fc = nn.Linear(decoder_dim, vocab_size)  # linear layer to find scores over vocabulary
+        self.init_weights()  # initialize some layers with the uniform distribution
+
+
+    def forward(self, encoder_out, decode_lengths=70):
+        """
+        Forward propagation.
+
+        :param encoder_out: encoded images, a tensor of dimension (batch_size, enc_image_size, enc_image_size, encoder_dim)
+        :param encoded_captions: encoded captions, a tensor of dimension (batch_size, max_caption_length)
+        :param caption_lengths: caption lengths, a tensor of dimension (batch_size, 1)
+        :return: scores for vocabulary, sorted encoded captions, decode lengths, weights, sort indices
+        """
+
+        batch_size = encoder_out.size(0)
+        encoder_dim = encoder_out.size(-1)
+        vocab_size = self.vocab_size
+
+        # Flatten image
+        encoder_out = encoder_out.view(batch_size, -1, encoder_dim)  # (batch_size, num_pixels, encoder_dim)
+        num_pixels = encoder_out.size(1)
+
+        # Embedding
+        # self.embedding = nn.Embedding(vocab_size, embed_dim)
+        # torch.nn.Embedding(num_embeddings, embedding_dim)
+        #       num_embeddings: size of the dictionary of embeddings
+        #       embedding_dim: the size of each embedding vector
+        # embeddings = self.embedding(encoded_captions)  # (batch_size, max_caption_length, embed_dim)
+
+        start_tockens = torch.ones(batch_size, 1) * 68
+        start_tockens.to(device)
+        embeddings = self.embedding(start_tockens)
+
+        # Initialize LSTM state
+        h, c = self.init_hidden_state(encoder_out)  # (batch_size, decoder_dim)
+
+        # Create tensors to hold word predicion scores and alphas
+        predictions = torch.zeros(batch_size, max(decode_lengths), vocab_size).to(device)
+
+        # At each time-step, decode by
+        # attention-weighing the encoder's output based on the decoder's previous hidden state output
+        # then generate a new word in the decoder with the previous word and the attention weighted encoding
+        for t in range(max(decode_lengths)):
+
+            # self.attention = Attention(encoder_dim, decoder_dim, attention_dim)
+            #   input: encoder_out, decoder_hidden
+            #   output: attention_weighted_encoding -> encoder_out * alpha, alpha -> attention vlaue
+            attention_weighted_encoding, alpha = self.attention(encoder_out,h)
+
+            # self.f_beta = nn.Linear(decoder_dim, encoder_dim)
+            gate = self.sigmoid(self.f_beta(h))  # gating scalar, (batch_size_t, encoder_dim)
+            attention_weighted_encoding = gate * attention_weighted_encoding
+
+            # self.decode_step = nn.LSTMCell(embed_dim + encoder_dim, decoder_dim, bias=True)
+            #   input: embeddings, (hidden, cell) -> embeddings
+            #   output: hidden, cell
+            h, c = self.decode_step(
+                torch.cat([embeddings, attention_weighted_encoding], dim=1),
+                (h, c))  # (batch_size_t, decoder_dim)
+
+            preds = self.fc(self.dropout(h))  # (batch_size_t, vocab_size)
+
+            predictions[:, t, :] = preds
+            embeddings = self.embedding(torch.argmax(preds, -1))
+
+        return predictions
+
 
 class DecoderWithAttention(nn.Module):
     """
