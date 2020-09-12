@@ -39,14 +39,13 @@ parser.add_argument('--model_load_num', type=int, default=None, help='epoch numb
 
 config = parser.parse_args()
 model = MSTS(config)
+make_directory(config.model_save_path)
 
 # Custom dataloaders
 normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
                                  std=[0.229, 0.224, 0.225])
 
 if config.work_type == 'train':
-    make_directory(config.model_save_path)
-
     train_loader = torch.utils.data.DataLoader(
         SmilesDataset(input_data_dir, base_file_name, 'TRAIN', transform=transforms.Compose([normalize])),
         batch_size=config.batch_size, shuffle=True, num_workers=config.workers, pin_memory=True)
