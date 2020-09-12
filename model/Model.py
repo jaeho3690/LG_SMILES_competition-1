@@ -117,7 +117,7 @@ class MSTS:
 
             # Calculate loss
             loss = self._criterion(predictions, targets)
-            mean_loss = mean_loss + (loss - mean_loss)/(i+1)
+            mean_loss = mean_loss + (loss.det().item() - mean_loss)/(i+1)
 
             # Back prop.
             self._decoder_optimizer.zero_grad()
@@ -151,7 +151,6 @@ class MSTS:
 
             imgs = self._encoder(imgs)
             predictions, caps_sorted, decode_lengths, _, _ = self._decoder(imgs, sequence, sequence_lens)
-
             targets = caps_sorted[:, 1:]
 
             accr = self._accuracy_calcluator(predictions.detach().cpu().numpy(),
@@ -163,7 +162,8 @@ class MSTS:
             targets = pack_padded_sequence(targets, decode_lengths, batch_first=True).data
 
             loss = self._criterion(predictions, targets)
-            mean_loss = mean_loss + (loss - mean_loss) / (i + 1)
+            mean_loss = mean_loss + (loss.detach().item() - mean_loss) / (i + 1)
+            del (loss, predictions, caps_sorted, decode_lengths, targets)
 
         return mean_loss, mean_accuracy
 
@@ -185,6 +185,8 @@ class MSTS:
             SMILES_predicted_sequence = list(torch.argmax(predictions.detach().cpu(), -1).numpy())
             decoded_sequences = decode_predicted_sequences(SMILES_predicted_sequence,reversed_token_map)
             submission['SMILES'].loc[i] = decoded_sequences
+
+            del (predictions)
 
         return submission
 
