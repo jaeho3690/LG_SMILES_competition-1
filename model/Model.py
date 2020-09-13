@@ -78,7 +78,7 @@ class MSTS:
         self._criterion = nn.CrossEntropyLoss().to(self._device)
 
 
-    def _seed_everything():
+    def _seed_everything(self):
         random.seed(self._seed)
         np.random.seed(self._seed)
         torch.manual_seed(self._seed)
