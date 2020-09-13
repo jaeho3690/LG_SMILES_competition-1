@@ -8,6 +8,7 @@ from torch.nn.utils.rnn import pack_padded_sequence
 from model.Network import Encoder, DecoderWithAttention, PredictiveDecoder
 from utils import make_directory,decode_predicted_sequences
 
+import random
 import numpy as np
 import asyncio
 import os
@@ -17,6 +18,7 @@ class MSTS:
         # self._data_folder = config.data_folder
         # self._data_name = config.data_name
         self._work_type = config.work_type
+        self._seed = config.seed
 
         self._vocab_size = 70
         self._emb_dim = config.emb_dim
@@ -44,6 +46,8 @@ class MSTS:
         self._model_load_num = config.model_load_num
 
         self._model_name = self._model_name_maker()
+
+        self._seed_everything()
 
         if self._work_type == 'train':
             self._decoder = DecoderWithAttention(attention_dim=self._attention_dim,
@@ -73,6 +77,14 @@ class MSTS:
         #    self._decoder = nn.DataParallel(self._decoder)
         self._criterion = nn.CrossEntropyLoss().to(self._device)
 
+
+    def _seed_everything(self):
+        random.seed(self._seed)
+        np.random.seed(self._seed)
+        torch.manual_seed(self._seed)
+        torch.cuda.manual_seed(self._seed)
+        torch.cuda.manual_seed_all(self._seed)
+        torch.backends.cudnn.benchmark = True 
 
     def _clip_gradient(self, optimizer, grad_clip):
         """
