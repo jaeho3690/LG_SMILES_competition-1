@@ -11,6 +11,7 @@ from utils import logger, make_directory,load_reversed_token_map
 parser = argparse.ArgumentParser()
 
 parser.add_argument('--work_type', type=str, default='train', help="choose work type 'train' or 'test'")
+parser.add_argument('--seed', type=int, default=1, help="choose seed number")
 
 parser.add_argument('--emb_dim', type=int, default=256, help='dimension of word embeddings')
 parser.add_argument('--attention_dim', type=int, default=256, help='dimension of attention linear layers')
