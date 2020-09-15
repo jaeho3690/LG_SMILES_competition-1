@@ -38,8 +38,8 @@ parser.add_argument('--model_load_path', type=str, default=None, help='model loa
 parser.add_argument('--model_load_num', type=int, default=None, help='epoch number of saved model')
 
 config = parser.parse_args()
+make_directory('../'+config.model_save_path)
 model = MSTS(config)
-make_directory(config.model_save_path)
 
 # Custom dataloaders
 normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],

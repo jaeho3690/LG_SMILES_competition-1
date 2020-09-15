@@ -4,7 +4,6 @@ import torch.utils.data
 import torchvision.transforms as transforms
 from torch import nn
 from torch.nn.utils.rnn import pack_padded_sequence
-from rdkit import DataStructs
 
 from model.Network import Encoder, DecoderWithAttention, PredictiveDecoder
 from utils import make_directory,decode_predicted_sequences
@@ -164,12 +163,8 @@ class MSTS:
             predictions, caps_sorted, decode_lengths, _, _ = self._decoder(imgs, sequence, sequence_lens)
             targets = caps_sorted[:, 1:]
 
-            # accr = self._accuracy_calcluator(predictions.detach().cpu().numpy(),
-            #                                  targets.detach().cpu().numpy())
-
-            pred = predictions.detach().cpu().numpy()
-            tar = targets.detach().cpu().numpy()
-            accr = DataStructs.FingerprintSimilarity(pred, tar)
+            accr = self._accuracy_calcluator(predictions.detach().cpu().numpy(),
+                                             targets.detach().cpu().numpy())
 
             mean_accuracy = mean_accuracy + (accr - mean_accuracy) / (i + 1)
 
@@ -231,6 +226,7 @@ class MSTS:
 
 
     def _accuracy_calcluator(self, prediction: np.array, target: np.array):
+        prediction = np.argmax(prediction, 2)
         l_p = prediction.shape[1]
         l_t = target.shape[1]
         dist = abs(l_p-l_t)
