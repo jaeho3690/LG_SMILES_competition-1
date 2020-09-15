@@ -231,7 +231,15 @@ class MSTS:
 
 
     def _accuracy_calcluator(self, prediction: np.array, target: np.array):
-        prediction = np.argmax(prediction,2)
-        accr_matrix = np.array(prediction==target, dtype=int)
+        l_p = prediction.shape[1]
+        l_t = target.shape[1]
+        dist = abs(l_p-l_t)
 
-        return accr_matrix.mean()
+        if l_p > l_t:
+            accr = np.array(prediction[:,:-dist] == target, dtype=np.int).mean()
+        elif l_p < l_t:
+            accr = np.array(prediction == target[:,:-dist], dtype=np.int).mean()
+        else:
+            accr = np.array(prediction == target, dtype=np.int).mean()
+
+        return accr
