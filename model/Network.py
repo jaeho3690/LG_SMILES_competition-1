@@ -190,7 +190,6 @@ class DecoderWithAttention(nn.Module):
                 (h[:batch_size_t], c[:batch_size_t]))  # (batch_size_t, decoder_dim)
 
             preds = self.fc(self.dropout(h))  # (batch_size_t, vocab_size)
-            print('preds:',preds.shape)
             predictions[:batch_size_t, t, :] = preds
 
             alphas[:batch_size_t, t, :] = alpha

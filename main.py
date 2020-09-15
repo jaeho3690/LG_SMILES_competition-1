@@ -64,19 +64,18 @@ if config.work_type == 'train':
         logger([t_l, t_a, v_l, v_a])
 
 
-
 elif config.work_type == 'test':
     import pandas as pd
     submission = pd.read_csv(sample_submission_dir)
     reversed_token_map= load_reversed_token_map(reversed_token_map_dir)
     test_loader = torch.utils.data.DataLoader(
-        SmilesDataset(input_data_dir, base_file_name= None, split= 'TEST', transform=transforms.Compose([normalize])),
+        SmilesDataset(input_data_dir, base_file_name= None, split='TEST', transform=transforms.Compose([normalize])),
         batch_size=1, shuffle=False, num_workers=config.workers, pin_memory=True)
 
     model.model_load()
     print('model loaded')
-    submission = model.model_test(submission, test_loader,reversed_token_map)
-    submission.to_csv('sample_submission.csv')
+    submission = model.model_test(submission, test_loader, reversed_token_map)
+    submission.to_csv('sample_submission.csv', index=False)
 
 
 else:

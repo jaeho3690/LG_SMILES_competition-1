@@ -4,6 +4,7 @@ import torch.utils.data
 import torchvision.transforms as transforms
 from torch import nn
 from torch.nn.utils.rnn import pack_padded_sequence
+from rdkit import DataStructs
 
 from model.Network import Encoder, DecoderWithAttention, PredictiveDecoder
 from utils import make_directory,decode_predicted_sequences
@@ -163,8 +164,12 @@ class MSTS:
             predictions, caps_sorted, decode_lengths, _, _ = self._decoder(imgs, sequence, sequence_lens)
             targets = caps_sorted[:, 1:]
 
-            accr = self._accuracy_calcluator(predictions.detach().cpu().numpy(),
-                                             targets.detach().cpu().numpy())
+            # accr = self._accuracy_calcluator(predictions.detach().cpu().numpy(),
+            #                                  targets.detach().cpu().numpy())
+
+            pred = predictions.detach().cpu().numpy()
+            tar = targets.detach().cpu().numpy()
+            accr = DataStructs.FingerprintSimilarity(pred, tar)
 
             mean_accuracy = mean_accuracy + (accr - mean_accuracy) / (i + 1)
 
@@ -200,20 +205,20 @@ class MSTS:
     def model_save(self, save_num):
         torch.save(
             self._decoder.state_dict(),
-            '{}/'.format(self._model_save_path)+self._model_name+'/decoder{}.pkl'.format(str(save_num).zfill(3))
+            '../' + '{}/'.format(self._model_save_path)+self._model_name+'/decoder{}.pkl'.format(str(save_num).zfill(3))
         )
         torch.save(
             self._encoder.state_dict(),
-            '{}/'.format(self._model_save_path)+self._model_name+'/encoder{}.pkl'.format(str(save_num).zfill(3))
+            '../' + '{}/'.format(self._model_save_path)+self._model_name+'/encoder{}.pkl'.format(str(save_num).zfill(3))
         )
 
 
     def model_load(self):
         self._decoder.load_state_dict(
-            torch.load('{}/decoder{}.pkl'.format(self._model_load_path, str(self._model_load_num).zfill(3)))
+            torch.load('../' + '{}/decoder{}.pkl'.format(self._model_load_path, str(self._model_load_num).zfill(3)))
         )
         self._encoder.load_state_dict(
-            torch.load('{}/encoder{}.pkl'.format(self._model_load_path, str(self._model_load_num).zfill(3)))
+            torch.load('../' + '{}/encoder{}.pkl'.format(self._model_load_path, str(self._model_load_num).zfill(3)))
         )
 
 
