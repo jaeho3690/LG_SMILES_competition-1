@@ -208,7 +208,26 @@ class MSTS:
                 is_smiles = self.is_smiles(decoded_sequences)
                 add_seed += 1
 
+            print('{}:, {}'.format(i, decoded_sequences))
 
+            submission['SMILES'].loc[i] = decoded_sequences
+            del (predictions)
+
+        return submission
+
+    def model_test_old(self, submission, test_loader, reversed_token_map):
+
+        self.model_load()
+        self._encoder.eval()
+        self._decoder.eval()
+
+        for i, imgs in enumerate(test_loader):
+            imgs = imgs.to(self._device)
+
+            imgs = self._encoder(imgs)
+            predictions = self._decoder(imgs)
+            SMILES_predicted_sequence = list(torch.argmax(predictions.detach().cpu(), -1).numpy())[0]
+            decoded_sequences = decode_predicted_sequences(SMILES_predicted_sequence, reversed_token_map)
             submission['SMILES'].loc[i] = decoded_sequences
             del (predictions)
 
