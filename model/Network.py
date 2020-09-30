@@ -1,3 +1,4 @@
+import numpy as np
 import torch
 from torch import nn
 import torchvision
@@ -94,7 +95,7 @@ class PredictiveDecoder(nn.Module):
 
         h, c = self.init_hidden_state(encoder_out)  # (batch_size, decoder_dim)
 
-        predictions = torch.zeros(batch_size, decode_lengths, vocab_size).to(device)
+        predictions = np.zeros(decode_lengths)
 
         for t in range(decode_lengths):
             attention_weighted_encoding, alpha = self.attention(encoder_out, h)
@@ -107,8 +108,10 @@ class PredictiveDecoder(nn.Module):
                 (h, c))  # (batch_size_t, decoder_dim)
 
             preds = self.fc(self.dropout(h))  # (batch_size_t, vocab_size)
-
-            predictions[:, t, :] = preds
+            preds_val = np.argmax(preds.detach().cpu().numpy())
+            predictions[t] = preds_val
+            if preds_val == 69: # end tokon
+                break
             embeddings = self.embedding(torch.argmax(preds, -1))
 
         return predictions

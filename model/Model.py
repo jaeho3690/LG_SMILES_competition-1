@@ -83,14 +83,6 @@ class MSTS:
         #    self._decoder = nn.DataParallel(self._decoder)
         self._criterion = nn.CrossEntropyLoss().to(self._device)
 
-    def _seed_everything(self, seed):
-        random.seed(seed)
-        np.random.seed(seed)
-        torch.manual_seed(seed)
-        torch.cuda.manual_seed(seed)
-        torch.cuda.manual_seed_all(seed)
-        torch.backends.cudnn.benchmark = True
-
     def _clip_gradient(self, optimizer, grad_clip):
         """
         Clips gradients computed during backpropagation to avoid explosion of gradients.
@@ -207,6 +199,7 @@ class MSTS:
                 add_seed += 1
 
                 print('{} is {}, {} seed sequence:, {}'.format(i, is_smiles, add_seed, decoded_sequences))
+                break
 
             submission['SMILES'].loc[i] = decoded_sequences
             del (predictions)
@@ -284,6 +277,10 @@ class MSTS:
 
         return accr
 
-    def _accuracy_calcluator_smiles(self, prediction: str, target: str):
-        pass
-
+    def _seed_everything(self, seed):
+        random.seed(seed)
+        np.random.seed(seed)
+        torch.manual_seed(seed)
+        torch.cuda.manual_seed(seed)
+        torch.cuda.manual_seed_all(seed)
+        torch.backends.cudnn.benchmark = True

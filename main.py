@@ -15,7 +15,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--work_type', type=str, default='train', help="choose work type 'train' or 'test'")
 parser.add_argument('--seed', type=int, default=1, help="choose seed number")
 
-parser.add_argument('--decode_length', type=int, default=70, help='length of decoded SMILES sequence')
+parser.add_argument('--decode_length', type=int, default=120, help='length of decoded SMILES sequence')
 parser.add_argument('--emb_dim', type=int, default=512, help='dimension of word embeddings')
 parser.add_argument('--attention_dim', type=int, default=512, help='dimension of attention linear layers')
 parser.add_argument('--decoder_dim', type=int, default=512, help='dimension of decoder RNN')
@@ -97,7 +97,6 @@ elif config.work_type == 'test':
         print('the test file path is none')
 
 elif config.work_type == 'test_old':
-    import pandas as pd
     submission = pd.read_csv(sample_submission_dir)
     reversed_token_map= load_reversed_token_map(reversed_token_map_dir)
     test_loader = torch.utils.data.DataLoader(
