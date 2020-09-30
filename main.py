@@ -15,9 +15,9 @@ parser.add_argument('--work_type', type=str, default='train', help="choose work 
 parser.add_argument('--seed', type=int, default=1, help="choose seed number")
 
 parser.add_argument('--decode_length', type=int, default=70, help='length of decoded SMILES sequence')
-parser.add_argument('--emb_dim', type=int, default=256, help='dimension of word embeddings')
-parser.add_argument('--attention_dim', type=int, default=256, help='dimension of attention linear layers')
-parser.add_argument('--decoder_dim', type=int, default=256, help='dimension of decoder RNN')
+parser.add_argument('--emb_dim', type=int, default=512, help='dimension of word embeddings')
+parser.add_argument('--attention_dim', type=int, default=512, help='dimension of attention linear layers')
+parser.add_argument('--decoder_dim', type=int, default=512, help='dimension of decoder RNN')
 parser.add_argument('--dropout', type=float, default=0.5, help='droup out rate')
 parser.add_argument('--device', type=str, default='cuda', help='sets device for model and PyTorch tensors')
 parser.add_argument('--cudnn_benchmark', type=bool, default=True, help='set to true only if inputs to model are fixed size; otherwise lot of computational overhead')
