@@ -5,13 +5,19 @@ import torchvision.transforms as transforms
 from torch import nn
 from torch.nn.utils.rnn import pack_padded_sequence
 
+from PIL import Image
+
+from rdkit import Chem
+from rdkit import DataStructs
+
 from model.Network import Encoder, DecoderWithAttention, PredictiveDecoder
-from utils import make_directory,decode_predicted_sequences
+from utils import make_directory, decode_predicted_sequences
 
 import random
 import numpy as np
 import asyncio
 import os
+
 
 class MSTS:
     def __init__(self, config):
@@ -21,6 +27,7 @@ class MSTS:
         self._seed = config.seed
 
         self._vocab_size = 70
+        self._decode_length = config.decode_length
         self._emb_dim = config.emb_dim
         self._attention_dim = config.attention_dim
         self._decoder_dim = config.decoder_dim
@@ -47,7 +54,7 @@ class MSTS:
 
         self._model_name = self._model_name_maker()
 
-        self._seed_everything()
+        self._seed_everything(self._seed)
 
         if self._work_type == 'train':
             self._decoder = DecoderWithAttention(attention_dim=self._attention_dim,
@@ -56,19 +63,19 @@ class MSTS:
                                                  vocab_size=self._vocab_size,
                                                  dropout=self._dropout)
             self._decoder_optimizer = torch.optim.Adam(params=filter(lambda p: p.requires_grad,
-                                                           self._decoder.parameters()),
-                                                           lr=self._decoder_lr)
+                                                                     self._decoder.parameters()),
+                                                       lr=self._decoder_lr)
         elif self._work_type == 'test':
             self._decoder = PredictiveDecoder(attention_dim=self._attention_dim,
-                                                 embed_dim=self._emb_dim,
-                                                 decoder_dim=self._decoder_dim,
-                                                 vocab_size=self._vocab_size)
+                                              embed_dim=self._emb_dim,
+                                              decoder_dim=self._decoder_dim,
+                                              vocab_size=self._vocab_size)
 
         self._encoder = Encoder()
         self._encoder.fine_tune(self._fine_tune_encoder)
         self._encoder_optimizer = torch.optim.Adam(params=filter(lambda p: p.requires_grad,
-                                                           self._encoder.parameters()),
-                                                           lr=self._encoder_lr) if self._fine_tune_encoder else None
+                                                                 self._encoder.parameters()),
+                                                   lr=self._encoder_lr) if self._fine_tune_encoder else None
         self._encoder.to(self._device)
         self._decoder.to(self._device)
         if torch.cuda.device_count() > 1:
@@ -77,14 +84,13 @@ class MSTS:
         #    self._decoder = nn.DataParallel(self._decoder)
         self._criterion = nn.CrossEntropyLoss().to(self._device)
 
-
-    def _seed_everything(self):
-        random.seed(self._seed)
-        np.random.seed(self._seed)
-        torch.manual_seed(self._seed)
-        torch.cuda.manual_seed(self._seed)
-        torch.cuda.manual_seed_all(self._seed)
-        torch.backends.cudnn.benchmark = True 
+    def _seed_everything(self, seed):
+        random.seed(seed)
+        np.random.seed(seed)
+        torch.manual_seed(seed)
+        torch.cuda.manual_seed(seed)
+        torch.cuda.manual_seed_all(seed)
+        torch.backends.cudnn.benchmark = True
 
     def _clip_gradient(self, optimizer, grad_clip):
         """
@@ -97,7 +103,6 @@ class MSTS:
             for param in group['params']:
                 if param.grad is not None:
                     param.grad.data.clamp_(-grad_clip, grad_clip)
-
 
     def train(self, train_loader):
 
@@ -120,14 +125,14 @@ class MSTS:
             # Calculate accuracy
             accr = self._accuracy_calcluator(predictions.detach().cpu().numpy(),
                                              targets.detach().cpu().numpy())
-            mean_accuracy = mean_accuracy + (accr - mean_accuracy) / (i+1)
+            mean_accuracy = mean_accuracy + (accr - mean_accuracy) / (i + 1)
 
             predictions = pack_padded_sequence(predictions, decode_lengths, batch_first=True).data
             targets = pack_padded_sequence(targets, decode_lengths, batch_first=True).data
 
             # Calculate loss
             loss = self._criterion(predictions, targets)
-            mean_loss = mean_loss + (loss.detach().item() - mean_loss)/(i+1)
+            mean_loss = mean_loss + (loss.detach().item() - mean_loss) / (i + 1)
 
             # Back prop.
             self._decoder_optimizer.zero_grad()
@@ -145,7 +150,6 @@ class MSTS:
             self._encoder_optimizer.step()
 
         return mean_loss, mean_accuracy
-
 
     def validation(self, val_loader):
         self._encoder.eval()
@@ -177,36 +181,62 @@ class MSTS:
 
         return mean_loss, mean_accuracy
 
+    def model_test(self, submission, data_list, reversed_token_map):
 
-    def model_test(self, submission, test_loader, reversed_token_map):
-
-        self.model_load()
         self._encoder.eval()
         self._decoder.eval()
 
-        for i, imgs in enumerate(test_loader):
-            imgs = imgs.to(self._device)
+        is_smiles = False
 
-            imgs = self._encoder(imgs)
-            predictions = self._decoder(imgs)
-            SMILES_predicted_sequence = list(torch.argmax(predictions.detach().cpu(), -1).numpy())[0]
-            decoded_sequences = decode_predicted_sequences(SMILES_predicted_sequence,reversed_token_map)
+        for i, img_path in enumerate(data_list):
+            img = Image.open(img_path)
+            imgs = self.png_to_tensor(img).to(self._device)
+
+            predictions = None
+            decoded_sequences = None
+            is_smiles = False
+            add_seed = 0
+
+            while not is_smiles:
+                self._seed_everything(self._seed + add_seed)
+                imgs = self._encoder(imgs)
+                predictions = self._decoder(imgs, self._decode_length)
+
+                SMILES_predicted_sequence = list(torch.argmax(predictions.detach().cpu(), -1).numpy())[0]
+                decoded_sequences = decode_predicted_sequences(SMILES_predicted_sequence, reversed_token_map)
+
+                is_smiles = self.is_smiles(decoded_sequences)
+                add_seed += 1
+
+
             submission['SMILES'].loc[i] = decoded_sequences
             del (predictions)
 
         return submission
 
+    def png_to_tensor(self, img: Image):
+        img = img.reshape((256,256))
+        pixel = np.array(img)
+        return torch.FloatTensor(pixel)
+
+    def is_smiles(self, sequence):
+        try:
+            Chem.MolFromSmiles(sequence)
+        except:
+            return False
+        return True
 
     def model_save(self, save_num):
         torch.save(
             self._decoder.state_dict(),
-            '../' + '{}/'.format(self._model_save_path)+self._model_name+'/decoder{}.pkl'.format(str(save_num).zfill(3))
+            '../' + '{}/'.format(self._model_save_path) + self._model_name + '/decoder{}.pkl'.format(
+                str(save_num).zfill(3))
         )
         torch.save(
             self._encoder.state_dict(),
-            '../' + '{}/'.format(self._model_save_path)+self._model_name+'/encoder{}.pkl'.format(str(save_num).zfill(3))
+            '../' + '{}/'.format(self._model_save_path) + self._model_name + '/encoder{}.pkl'.format(
+                str(save_num).zfill(3))
         )
-
 
     def model_load(self):
         self._decoder.load_state_dict(
@@ -216,7 +246,6 @@ class MSTS:
             torch.load('../' + '{}/encoder{}.pkl'.format(self._model_load_path, str(self._model_load_num).zfill(3)))
         )
 
-
     def _model_name_maker(self):
         name = 'model-emb_dim_{}-attention_dim_{}-decoder_dim_{}-dropout_{}-batch_size_{}'.format(
             self._emb_dim, self._attention_dim, self._decoder_dim, self._dropout, self._batch_size)
@@ -224,18 +253,21 @@ class MSTS:
 
         return name
 
-
     def _accuracy_calcluator(self, prediction: np.array, target: np.array):
         prediction = np.argmax(prediction, 2)
         l_p = prediction.shape[1]
         l_t = target.shape[1]
-        dist = abs(l_p-l_t)
+        dist = abs(l_p - l_t)
 
         if l_p > l_t:
-            accr = np.array(prediction[:,:-dist] == target, dtype=np.int).mean()
+            accr = np.array(prediction[:, :-dist] == target, dtype=np.int).mean()
         elif l_p < l_t:
-            accr = np.array(prediction == target[:,:-dist], dtype=np.int).mean()
+            accr = np.array(prediction == target[:, :-dist], dtype=np.int).mean()
         else:
             accr = np.array(prediction == target, dtype=np.int).mean()
 
         return accr
+
+    def _accuracy_calcluator_smiles(self, prediction: str, target: str):
+        pass
+

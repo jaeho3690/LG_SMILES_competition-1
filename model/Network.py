@@ -97,7 +97,7 @@ class PredictiveDecoder(nn.Module):
         predictions = torch.zeros(batch_size, decode_lengths, vocab_size).to(device)
 
         for t in range(decode_lengths):
-            attention_weighted_encoding, alpha = self.attention(encoder_out,h)
+            attention_weighted_encoding, alpha = self.attention(encoder_out, h)
 
             gate = self.sigmoid(self.f_beta(h))  # gating scalar, (batch_size_t, encoder_dim)
             attention_weighted_encoding = gate * attention_weighted_encoding
@@ -180,7 +180,7 @@ class DecoderWithAttention(nn.Module):
         for t in range(max(decode_lengths)):
             batch_size_t = sum([l > t for l in decode_lengths])
 
-            attention_weighted_encoding, alpha = self.attention(encoder_out[:batch_size_t],h[:batch_size_t])
+            attention_weighted_encoding, alpha = self.attention(encoder_out[:batch_size_t], h[:batch_size_t])
 
             gate = self.sigmoid(self.f_beta(h[:batch_size_t]))  # gating scalar, (batch_size_t, encoder_dim)
             attention_weighted_encoding = gate * attention_weighted_encoding
