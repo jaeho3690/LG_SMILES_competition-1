@@ -87,9 +87,10 @@ elif config.work_type == 'test':
         data_list = os.listdir(config.test_file_path)
         data_list = [config.test_file_path + dl for dl in data_list]
 
+        transform = transforms.Compose([normalize])
         model.model_load()
         print('model loaded')
-        submission = model.model_test(submission, data_list, reversed_token_map)
+        submission = model.model_test(submission, data_list, reversed_token_map, transform)
         submission.to_csv('sample_submission.csv', index=False)
 
     else:

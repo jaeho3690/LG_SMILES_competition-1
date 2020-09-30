@@ -1,7 +1,6 @@
 import torch.backends.cudnn as cudnn
 import torch.optim
 import torch.utils.data
-import torchvision.transforms as transforms
 from torch import nn
 from torch.nn.utils.rnn import pack_padded_sequence
 
@@ -65,7 +64,7 @@ class MSTS:
             self._decoder_optimizer = torch.optim.Adam(params=filter(lambda p: p.requires_grad,
                                                                      self._decoder.parameters()),
                                                        lr=self._decoder_lr)
-        elif self._work_type == 'test':
+        elif self._work_type == 'test' or self._work_type == 'test_old':
             self._decoder = PredictiveDecoder(attention_dim=self._attention_dim,
                                               embed_dim=self._emb_dim,
                                               decoder_dim=self._decoder_dim,
@@ -181,7 +180,7 @@ class MSTS:
 
         return mean_loss, mean_accuracy
 
-    def model_test(self, submission, data_list, reversed_token_map):
+    def model_test(self, submission, data_list, reversed_token_map, transform):
 
         self._encoder.eval()
         self._decoder.eval()
@@ -191,6 +190,7 @@ class MSTS:
         for i, img_path in enumerate(data_list):
             img = Image.open(img_path)
             imgs = self.png_to_tensor(img).to(self._device)
+            imgs = transform(imgs)
 
             predictions = None
             decoded_sequences = None
@@ -215,6 +215,26 @@ class MSTS:
 
         return submission
 
+    def model_test2(self, submission, data_list, reversed_token_map, transform):
+
+        self._encoder.eval()
+        self._decoder.eval()
+
+        for i, img_path in enumerate(data_list):
+            img = Image.open(img_path)
+            imgs = self.png_to_tensor(img).to(self._device)
+            imgs = transform(imgs)
+
+            imgs = self._encoder(imgs)
+            predictions = self._decoder(imgs, self._decode_length)
+            SMILES_predicted_sequence = list(torch.argmax(predictions.detach().cpu(), -1).numpy())[0]
+            decoded_sequences = decode_predicted_sequences(SMILES_predicted_sequence, reversed_token_map)
+            print('{}:, {}'.format(i, decoded_sequences))
+            submission['SMILES'].loc[i] = decoded_sequences
+            del (predictions)
+
+        return submission
+
     def model_test_old(self, submission, test_loader, reversed_token_map):
 
         self.model_load()
@@ -228,6 +248,7 @@ class MSTS:
             predictions = self._decoder(imgs)
             SMILES_predicted_sequence = list(torch.argmax(predictions.detach().cpu(), -1).numpy())[0]
             decoded_sequences = decode_predicted_sequences(SMILES_predicted_sequence, reversed_token_map)
+            print('{}:, {}'.format(i, decoded_sequences))
             submission['SMILES'].loc[i] = decoded_sequences
             del (predictions)
 
@@ -235,9 +256,9 @@ class MSTS:
 
     def png_to_tensor(self, img: Image):
         img = img.resize((256,256))
-        pixel = np.array(img)
-        pixel = np.moveaxis(pixel, -1, 0)
-        return torch.FloatTensor([pixel]) / 255.
+        img = np.array(img)
+        img = np.moveaxis(img, 2, 0)
+        return torch.FloatTensor([img]) / 255.
 
     def is_smiles(self, sequence):
         try:
