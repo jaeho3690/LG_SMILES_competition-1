@@ -190,8 +190,7 @@ class MSTS:
         for i, img_path in enumerate(data_list):
             imgs = Image.open(img_path)
             imgs = self.png_to_tensor(imgs)
-            imgs = transform(imgs)
-            imgs = torch.FloatTensor([imgs]).to(self._device)
+            imgs = transform(imgs).to(self._device)
 
 
             predictions = None
@@ -201,7 +200,7 @@ class MSTS:
 
             while not is_smiles:
                 self._seed_everything(self._seed + add_seed)
-                imgs = self._encoder(imgs)
+                imgs = self._encoder(imgs.unsqueeze_(0))
                 predictions = self._decoder(imgs, self._decode_length)
 
                 SMILES_predicted_sequence = list(torch.argmax(predictions.detach().cpu(), -1).numpy())[0]
@@ -225,10 +224,9 @@ class MSTS:
         for i, img_path in enumerate(data_list):
             imgs = Image.open(img_path)
             imgs = self.png_to_tensor(imgs)
-            imgs = transform(imgs)
-            imgs = torch.FloatTensor([imgs]).to(self._device)
+            imgs = transform(imgs).to(self._device)
 
-            imgs = self._encoder(imgs)
+            imgs = self._encoder(imgs.unsqueeze_(0))
             predictions = self._decoder(imgs, self._decode_length)
             SMILES_predicted_sequence = list(torch.argmax(predictions.detach().cpu(), -1).numpy())[0]
             decoded_sequences = decode_predicted_sequences(SMILES_predicted_sequence, reversed_token_map)
