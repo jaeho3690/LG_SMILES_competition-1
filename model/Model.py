@@ -197,8 +197,8 @@ class MSTS:
 
             while not is_smiles:
                 self._seed_everything(self._seed + add_seed)
-                imgs = self._encoder(imgs.unsqueeze(0))
-                predictions = self._decoder(imgs, self._decode_length)
+                encoded_imgs = self._encoder(imgs.unsqueeze(0))
+                predictions = self._decoder(encoded_imgs, self._decode_length)
 
                 SMILES_predicted_sequence = list(torch.argmax(predictions.detach().cpu(), -1).numpy())[0]
                 decoded_sequences = decode_predicted_sequences(SMILES_predicted_sequence, reversed_token_map)
