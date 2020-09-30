@@ -239,11 +239,8 @@ class MSTS:
         return torch.FloatTensor(img) / 255.
 
     def is_smiles(self, sequence):
-        try:
-            Chem.MolFromSmiles(sequence)
-        except:
-            return False
-        return True
+        m = Chem.MolFromSmiles(sequence)
+        return False if m == None else True
 
     def model_save(self, save_num):
         torch.save(
