@@ -215,9 +215,10 @@ class MSTS:
         return submission
 
     def png_to_tensor(self, img: Image):
-        img = img.reshape((256,256))
+        img = img.resize((256,256))
         pixel = np.array(img)
-        return torch.FloatTensor(pixel)
+        pixel = np.moveaxis(pixel, -1, 0)
+        return torch.FloatTensor([pixel]) / 255.
 
     def is_smiles(self, sequence):
         try:
@@ -240,10 +241,10 @@ class MSTS:
 
     def model_load(self):
         self._decoder.load_state_dict(
-            torch.load('../' + '{}/decoder{}.pkl'.format(self._model_load_path, str(self._model_load_num).zfill(3)))
+            torch.load('{}/decoder{}.pkl'.format(self._model_load_path, str(self._model_load_num).zfill(3)))
         )
         self._encoder.load_state_dict(
-            torch.load('../' + '{}/encoder{}.pkl'.format(self._model_load_path, str(self._model_load_num).zfill(3)))
+            torch.load('{}/encoder{}.pkl'.format(self._model_load_path, str(self._model_load_num).zfill(3)))
         )
 
     def _model_name_maker(self):

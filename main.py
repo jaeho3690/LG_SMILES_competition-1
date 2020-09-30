@@ -7,8 +7,9 @@ import pandas as pd
 from model.Model import MSTS
 from src.datasets import SmilesDataset
 from src.config import input_data_dir, base_file_name, sample_submission_dir, reversed_token_map_dir
-from utils import logger, make_directory, load_reversed_token_map
+from utils import logger, make_directory, load_reversed_token_map, smiles_name_print
 
+smiles_name_print()
 parser = argparse.ArgumentParser()
 
 parser.add_argument('--work_type', type=str, default='train', help="choose work type 'train' or 'test'")
@@ -36,9 +37,12 @@ parser.add_argument('--print_freq', type=int, default=100, help='print training/
 parser.add_argument('--fine_tune_encoder', type=bool, default=True, help='fine-tune encoder')
 
 parser.add_argument('--model_save_path', type=str, default='graph_save', help='model save path')
-parser.add_argument('--model_load_path', type=str, default=None, help='model load path')
-parser.add_argument('--model_load_num', type=int, default=None, help='epoch number of saved model')
-parser.add_argument('--test_file_path', type=str, default=None, help='test file path')
+# parser.add_argument('--model_load_path', type=str, default=None, help='model load path')
+# parser.add_argument('--model_load_num', type=int, default=None, help='epoch number of saved model')
+# parser.add_argument('--test_file_path', type=str, default=None, help='test file path')
+parser.add_argument('--model_load_path', type=str, default='/home/hjyang/jaeho_model/wide_resnet', help='model load path')
+parser.add_argument('--model_load_num', type=int, default=8, help='epoch number of saved model')
+parser.add_argument('--test_file_path', type=str, default='/home/hjyang/test/', help='test file path')
 
 config = parser.parse_args()
 make_directory('../' + config.model_save_path)
@@ -54,12 +58,16 @@ if config.work_type == 'train':
         print('model loaded')
 
     train_loader = torch.utils.data.DataLoader(
-        SmilesDataset(input_data_dir, base_file_name, 'TRAIN', transform=transforms.Compose([normalize])),
-        batch_size=config.batch_size, shuffle=True, num_workers=config.workers, pin_memory=True)
+        SmilesDataset(input_data_dir, base_file_name, 'TRAIN',
+                      transform=transforms.Compose([normalize])),
+        batch_size=config.batch_size, shuffle=True,
+        num_workers=config.workers, pin_memory=True)
 
     val_loader = torch.utils.data.DataLoader(
-        SmilesDataset(input_data_dir, base_file_name, 'VAL', transform=transforms.Compose([normalize])),
-        batch_size=config.batch_size, shuffle=True, num_workers=config.workers, pin_memory=True)
+        SmilesDataset(input_data_dir, base_file_name, 'VAL',
+                      transform=transforms.Compose([normalize])),
+        batch_size=config.batch_size, shuffle=True,
+        num_workers=config.workers, pin_memory=True)
 
     log_index = ['t_loss', 't_accr', 'v_loss', 'v_accr']
     logger(log_index)
@@ -77,6 +85,7 @@ elif config.work_type == 'test':
         submission = pd.read_csv(sample_submission_dir)
         reversed_token_map = load_reversed_token_map(reversed_token_map_dir)
         data_list = os.listdir(config.test_file_path)
+        data_list = [config.test_file_path + dl for dl in data_list]
 
         model.model_load()
         print('model loaded')

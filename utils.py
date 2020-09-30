@@ -46,5 +46,9 @@ def decode_predicted_sequences(predicted_sequence_list,reversed_token_map):
     
     return predicted_sequence_str
 
-
-
+def smiles_name_print():
+    print('  ______   __    __   __   __       ______   ______    ')
+    print(' /\  ___\ /\ "-./  \ /\ \ /\ \     /\  ___\ /\  ___\   ')
+    print(' \ \___  \\\\ \ \-./\ \\\\ \ \\\\ \ \____\ \  __\ \ \___  \  ')
+    print('  \/\_____\\\\ \_\ \ \_\\\\ \_\\\\ \_____\\\\ \_____\\\\/\_____\ ')
+    print('   \/_____/ \/_/  \/_/ \/_/ \/_____/ \/_____/ \/_____/ ')
