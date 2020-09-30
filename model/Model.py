@@ -185,13 +185,10 @@ class MSTS:
         self._encoder.eval()
         self._decoder.eval()
 
-        is_smiles = False
-
         for i, img_path in enumerate(data_list):
             imgs = Image.open(img_path)
             imgs = self.png_to_tensor(imgs)
             imgs = transform(imgs).to(self._device)
-
 
             predictions = None
             decoded_sequences = None
@@ -209,28 +206,8 @@ class MSTS:
                 is_smiles = self.is_smiles(decoded_sequences)
                 add_seed += 1
 
-            print('{}:, {}'.format(i, decoded_sequences))
+                print('{} is {}, sequence:, {}'.format(i, is_smiles, decoded_sequences))
 
-            submission['SMILES'].loc[i] = decoded_sequences
-            del (predictions)
-
-        return submission
-
-    def model_test2(self, submission, data_list, reversed_token_map, transform):
-
-        self._encoder.eval()
-        self._decoder.eval()
-
-        for i, img_path in enumerate(data_list):
-            imgs = Image.open(img_path)
-            imgs = self.png_to_tensor(imgs)
-            imgs = transform(imgs).to(self._device)
-
-            imgs = self._encoder(imgs.unsqueeze_(0))
-            predictions = self._decoder(imgs, self._decode_length)
-            SMILES_predicted_sequence = list(torch.argmax(predictions.detach().cpu(), -1).numpy())[0]
-            decoded_sequences = decode_predicted_sequences(SMILES_predicted_sequence, reversed_token_map)
-            print('{}:, {}'.format(i, decoded_sequences))
             submission['SMILES'].loc[i] = decoded_sequences
             del (predictions)
 
