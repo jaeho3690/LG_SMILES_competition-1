@@ -50,6 +50,7 @@ class MSTS:
         self._model_save_path = config.model_save_path
         self._model_load_path = config.model_load_path
         self._model_load_num = config.model_load_num
+        self._test_file_path = config.test_file_path
 
         self._model_name = self._model_name_maker()
 
@@ -177,8 +178,8 @@ class MSTS:
         self._encoder.eval()
         self._decoder.eval()
 
-        for i, img_path in enumerate(data_list):
-            imgs = Image.open(img_path)
+        for i, dat in enumerate(data_list):
+            imgs = Image.open(self._test_file_path + dat)
             imgs = self.png_to_tensor(imgs)
             imgs = transform(imgs).to(self._device)
 
@@ -201,7 +202,7 @@ class MSTS:
                 print('{} is {}, {} seed sequence:, {}'.format(i, is_smiles, add_seed, decoded_sequences))
                 break
 
-            submission['SMILES'].loc[i] = decoded_sequences
+            submission.loc[submission['file_name']== dat, 'SMILES'] = decoded_sequences
             del (predictions)
 
         return submission

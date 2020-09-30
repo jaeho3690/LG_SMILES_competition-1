@@ -85,7 +85,6 @@ elif config.work_type == 'test':
         submission = pd.read_csv(sample_submission_dir)
         reversed_token_map = load_reversed_token_map(reversed_token_map_dir)
         data_list = os.listdir(config.test_file_path)
-        data_list = [config.test_file_path + dl for dl in data_list]
 
         transform = transforms.Compose([normalize])
         model.model_load()
