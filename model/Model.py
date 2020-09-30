@@ -206,7 +206,7 @@ class MSTS:
                 is_smiles = self.is_smiles(decoded_sequences)
                 add_seed += 1
 
-                print('{} is {}, sequence:, {}'.format(i, is_smiles, decoded_sequences))
+                print('{} is {}, {} seed sequence:, {}'.format(i, is_smiles, add_seed, decoded_sequences))
 
             submission['SMILES'].loc[i] = decoded_sequences
             del (predictions)
