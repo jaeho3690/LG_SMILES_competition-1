@@ -49,6 +49,9 @@ class Predict():
         self._decoder.load_state_dict(
             torch.load('{}/decoder{}.pkl'.format(self._model_load_path, self._model_load_name))
         )
-        self._encoder.load_state_dict(
-            torch.load('{}/encoder{}.pkl'.format(self._model_load_path, self._model_load_name))
-        )
+
+        weight_data = torch.load('{}/encoder{}.pkl'.format(self._model_load_path, self._model_load_name))
+        new_keys = [x[7:] for x in list(weight_data.keys())]
+        for key, n_key in zip(weight_data.keys(), new_keys):
+            weight_data[n_key] = weight_data.pop(key)
+        self._encoder.load_state_dict(weight_data)
