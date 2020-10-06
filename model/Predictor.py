@@ -24,6 +24,7 @@ class Predict():
                                           decoder_dim=self._decoder_dim,
                                           vocab_size=self._vocab_size)
         self.model_load()
+        print(load_model_name, 'load successed!')
 
     def SMILES_prediction(self, img):
 
