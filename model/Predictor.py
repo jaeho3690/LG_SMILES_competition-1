@@ -19,7 +19,7 @@ class Predict():
         self._model_load_name = config['load_model_name']
         self._model_load_path = load_path
 
-        self._encoder = Encoder(config['encoder_type'])
+        self._encoder = Encoder(model_type=config['encoder_type'])
         self._decoder = PredictiveDecoder(attention_dim=self._attention_dim,
                                           embed_dim=self._emb_dim,
                                           decoder_dim=self._decoder_dim,

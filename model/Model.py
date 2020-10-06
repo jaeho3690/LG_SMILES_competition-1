@@ -255,6 +255,9 @@ class MSTS:
                 smiles_dict.append(FPS(combination[0], combination[1]))
             most_common_k = Counter(smiles_dict).most_common(top_k)
 
+            print('smiles_dict:', smiles_dict)
+            print('most_common_k:', most_common_k)
+
             if most_common_k[0][1] == 1:
                 sequence = preds[combination_index[0][0][1]]
             else:
@@ -262,6 +265,8 @@ class MSTS:
                 second_common = Counter(most_common_k[1][0])
                 combine = first_common + second_common
                 sequence = preds[combine.most_common(1)[0][0]]
+
+            print('{} sequence:, {}'.format(i, sequence))
 
             submission.loc[submission['file_name'] == dat, 'SMILES'] = sequence
             del(preds)
