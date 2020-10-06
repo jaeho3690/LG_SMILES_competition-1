@@ -261,19 +261,19 @@ class MSTS:
 
             # sort by score
             smiles_dict = sorted(smiles_dict.items(), key=(lambda x: x[1]), reverse=True)
-
-            most_common_k = Counter(smiles_dict).most_common(top_k)
+            # most_common_k = Counter(smiles_dict).most_common(top_k)
 
             print('smiles_dict:', smiles_dict)
-            print('most_common_k:', most_common_k)
 
             if smiles_dict[0][1] == 1.0:
-                sequence = preds[combination_index[0][0][1]]
+                sequence = preds[smiles_dict[0][0][0]]
             else:
-                first_common = Counter(most_common_k[0][0])
-                second_common = Counter(most_common_k[1][0])
-                combine = first_common + second_common
-                sequence = preds[combine.most_common(1)[0][0]]
+                score_board = np.zeros(4)
+                for i, (idx, value) in enumerate(smiles_dict):
+                    score_board[list(idx)] = 4-i
+
+                print('score_board:', score_board)
+                sequence = preds[np.argmax(score_board)]
 
             print('{} sequence:, {}'.format(i, sequence))
 
