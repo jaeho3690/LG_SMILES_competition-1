@@ -267,7 +267,7 @@ class MSTS:
             print('smiles_dict:', smiles_dict)
             print('most_common_k:', most_common_k)
 
-            if list(smiles_dict.values()) == 1.0:
+            if smiles_dict[0][1] == 1.0:
                 sequence = preds[combination_index[0][0][1]]
             else:
                 first_common = Counter(most_common_k[0][0])
