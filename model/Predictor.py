@@ -29,7 +29,7 @@ class Predict():
         self._decoder.to(device)
 
         self.model_load()
-        print(load_model_name, 'load successed!')
+        print(self._model_load_name, 'load successed!')
 
     def SMILES_prediction(self, img):
 
