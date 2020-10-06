@@ -73,7 +73,7 @@ class MSTS:
             self._decoder_optimizer = torch.optim.Adam(params=filter(lambda p: p.requires_grad,
                                                                      self._decoder.parameters()),
                                                        lr=self._decoder_lr)
-        elif self._work_type == 'test' or self._work_type == 'test_old':
+        elif self._work_type == 'test' or self._work_type == 'ensemble_test':
             self._decoder = PredictiveDecoder(attention_dim=self._attention_dim,
                                               embed_dim=self._emb_dim,
                                               decoder_dim=self._decoder_dim,
