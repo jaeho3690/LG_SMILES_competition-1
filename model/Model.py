@@ -253,9 +253,9 @@ class MSTS:
             print('combination_of_smiles:', combination_of_smiles)
             print('combination_index:', combination_index)
 
-            smiles_dict = []
-            for combination in combination_of_smiles:
-                smiles_dict.append(FPS(combination[0], combination[1]))
+            smiles_dict = {}
+            for combination, index in zip(combination_of_smiles, combination_index):
+                smiles_dict[index] = (FPS(combination[0], combination[1]))
             most_common_k = Counter(smiles_dict).most_common(top_k)
 
             print('smiles_dict:', smiles_dict)
