@@ -1,36 +1,24 @@
 import torch.backends.cudnn as cudnn
 import torch.optim
 import torch.utils.data
-from torch import nn
-from torch.nn.utils.rnn import pack_padded_sequence
-
-from PIL import Image
-
-from rdkit import Chem
-from rdkit import DataStructs
-
-from model.Network import Encoder, DecoderWithAttention, PredictiveDecoder
-from utils import make_directory, decode_predicted_sequences
-
-import random
-import numpy as np
-import asyncio
-import os
+from model.Network import Encoder, PredictiveDecoder
+from utils import decode_predicted_sequences
 
 
 class Predict():
-    def __init__(self, config, load_model_name, encoder_type, reversed_token_map):
+    def __init__(self, config, load_model_name, reversed_token_map, decode_length, load_path):
 
         self._vocab_size = 70
-        self._decode_length = config.decode_length
-        self._emb_dim = config.emb_dim
-        self._attention_dim = config.attention_dim
-        self._decoder_dim = config.decoder_dim
+        self._decode_length = decode_length
+        self._emb_dim = config['emb_dim']
+        self._attention_dim = config['attention_dim']
+        self._decoder_dim = config['decoder_dim']
         self._reversed_token_map = reversed_token_map
 
         self._model_load_name = load_model_name
+        self._model_load_path = load_path
 
-        self._encoder = Encoder(encoder_type)
+        self._encoder = Encoder(config['encoder_type'])
         self._decoder = PredictiveDecoder(attention_dim=self._attention_dim,
                                           embed_dim=self._emb_dim,
                                           decoder_dim=self._decoder_dim,
@@ -53,8 +41,8 @@ class Predict():
 
     def model_load(self):
         self._decoder.load_state_dict(
-            torch.load('{}/decoder{}.pkl'.format(self._model_load_name))
+            torch.load('{}/decoder{}.pkl'.format(self.load_path, self._model_load_name))
         )
         self._encoder.load_state_dict(
-            torch.load('{}/encoder{}.pkl'.format(self._model_load_name))
+            torch.load('{}/encoder{}.pkl'.format(self.load_path, self._model_load_name))
         )

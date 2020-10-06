@@ -17,6 +17,7 @@ from utils import make_directory, decode_predicted_sequences
 
 import random
 import numpy as np
+import yaml
 import asyncio
 import os
 
@@ -29,7 +30,6 @@ class MSTS:
     def __init__(self, config):
         # self._data_folder = config.data_folder
         # self._data_name = config.data_name
-        self._config = config
         self._work_type = config.work_type
         self._seed = config.seed
 
@@ -219,8 +219,12 @@ class MSTS:
     def ensemble_test(self, submission, data_list, reversed_token_map, transform):
         predictors = []
         encoder_type = ['wide_res', 'wide_res', 'res', 'res']
-        for name, type in enumerate(encoder_type):
-            predictors.append(Predict(self._config, name, type, reversed_token_map))
+        with open('model/prediction_models.yaml') as f:
+            p_configs = yaml.load(f)
+
+        for name, conf in enumerate(p_configs.value()):
+            predictors.append(Predict(conf, name, reversed_token_map,
+                                      self._decode_length, self._model_load_path))
 
         fault_counter = 0
 

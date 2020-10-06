@@ -1,0 +1,23 @@
+model1:
+  emb_dim: 512
+  attention_dim: 512
+  decoder_dim: 512
+  encoder_type: wide_res
+
+model2:
+  emb_dim: 512
+  attention_dim: 512
+  decoder_dim: 512
+  encoder_type: wide_res
+
+model3:
+  emb_dim: 512
+  attention_dim: 512
+  decoder_dim: 512
+  encoder_type: res
+
+model4:
+  emb_dim: 256
+  attention_dim: 256
+  decoder_dim: 256
+  encoder_type: res
