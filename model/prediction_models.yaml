@@ -3,21 +3,25 @@ model1:
   attention_dim: 512
   decoder_dim: 512
   encoder_type: wide_res
+  load_model_name: 0
 
 model2:
   emb_dim: 512
   attention_dim: 512
   decoder_dim: 512
   encoder_type: wide_res
+  load_model_name: 1
 
 model3:
   emb_dim: 512
   attention_dim: 512
   decoder_dim: 512
   encoder_type: res
+  load_model_name: 2
 
 model4:
   emb_dim: 256
   attention_dim: 256
   decoder_dim: 256
   encoder_type: res
+  load_model_name: 3

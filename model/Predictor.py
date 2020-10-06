@@ -7,7 +7,7 @@ from utils import decode_predicted_sequences
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 class Predict():
-    def __init__(self, config, load_model_name, reversed_token_map, decode_length, load_path):
+    def __init__(self, config, reversed_token_map, decode_length, load_path):
 
         self._vocab_size = 70
         self._decode_length = decode_length
@@ -16,7 +16,7 @@ class Predict():
         self._decoder_dim = int(config['decoder_dim'])
         self._reversed_token_map = reversed_token_map
 
-        self._model_load_name = load_model_name
+        self._model_load_name = config['load_model_name']
         self._model_load_path = load_path
 
         self._encoder = Encoder(config['encoder_type'])

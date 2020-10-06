@@ -222,8 +222,8 @@ class MSTS:
         with open('model/prediction_models.yaml') as f:
             p_configs = yaml.load(f)
 
-        for name, conf in enumerate(p_configs.values()):
-            predictors.append(Predict(conf, name, reversed_token_map,
+        for conf in p_configs.values():
+            predictors.append(Predict(conf, reversed_token_map,
                                       self._decode_length, self._model_load_path))
 
         fault_counter = 0
