@@ -40,7 +40,7 @@ parser.add_argument('--model_save_path', type=str, default='graph_save', help='m
 # parser.add_argument('--model_load_path', type=str, default=None, help='model load path')
 # parser.add_argument('--model_load_num', type=int, default=None, help='epoch number of saved model')
 # parser.add_argument('--test_file_path', type=str, default=None, help='test file path')
-parser.add_argument('--model_load_path', type=str, default='/home/hjyang/jaeho_model/wide_resnet', help='model load path')
+parser.add_argument('--model_load_path', type=str, default='/home/hjyang/final_model', help='model load path')
 parser.add_argument('--model_load_num', type=int, default=8, help='epoch number of saved model')
 parser.add_argument('--test_file_path', type=str, default='/home/hjyang/test/', help='test file path')
 

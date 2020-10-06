@@ -41,8 +41,8 @@ class Predict():
 
     def model_load(self):
         self._decoder.load_state_dict(
-            torch.load('{}/decoder{}.pkl'.format(self.load_path, self._model_load_name))
+            torch.load('{}/decoder{}.pkl'.format(self._model_load_path, self._model_load_name))
         )
         self._encoder.load_state_dict(
-            torch.load('{}/encoder{}.pkl'.format(self.load_path, self._model_load_name))
+            torch.load('{}/encoder{}.pkl'.format(self._model_load_path, self._model_load_name))
         )
