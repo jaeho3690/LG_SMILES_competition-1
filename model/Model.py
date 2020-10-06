@@ -250,8 +250,8 @@ class MSTS:
             ms_to_index = [x for x in ms]
             combination_index = combinations(ms_to_index, 2)
 
-            print('combination_of_smiles:', combination_of_smiles)
-            print('combination_index:', combination_index)
+            print('combination_of_smiles:', list(combination_of_smiles))
+            print('combination_index:', list(combination_index))
 
             smiles_dict = []
             for combination in combination_of_smiles:
