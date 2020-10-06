@@ -250,6 +250,9 @@ class MSTS:
             ms_to_index = [x for x in ms]
             combination_index = combinations(ms_to_index, 2)
 
+            print('combination_of_smiles:', combination_of_smiles)
+            print('combination_index:', combination_index)
+
             smiles_dict = []
             for combination in combination_of_smiles:
                 smiles_dict.append(FPS(combination[0], combination[1]))
