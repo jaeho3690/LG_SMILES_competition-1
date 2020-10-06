@@ -103,8 +103,6 @@ elif config.work_type == 'ensemble_test':
         data_list = os.listdir(config.test_file_path)
 
         transform = transforms.Compose([normalize])
-        model.model_load()
-        print('model loaded')
         submission = model.ensemble_test(submission, data_list, reversed_token_map, transform)
         submission.to_csv('sample_submission.csv', index=False)
 
