@@ -14,7 +14,7 @@ class Encoder(nn.Module):
         if model_type == 'wide_res':
             resnet = torchvision.models.wide_resnet101_2(pretrained=True)  # pretrained ImageNet wide_ResNet-101_2
         elif model_type == 'res':
-            resnet = torchvision.models.resnet152(pretrained=True)  # pretrained ImageNet wide_ResNet-101_2
+            resnet = torchvision.models.resnet152(pretrained=True)  # pretrained ImageNet wide_ResNet152
         modules = list(resnet.children())[:-2]
         self.resnet = nn.Sequential(*modules)
         self.adaptive_pool = nn.AdaptiveAvgPool2d((encoded_image_size, encoded_image_size))

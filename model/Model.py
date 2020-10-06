@@ -73,32 +73,26 @@ class MSTS:
             self._decoder_optimizer = torch.optim.Adam(params=filter(lambda p: p.requires_grad,
                                                                      self._decoder.parameters()),
                                                        lr=self._decoder_lr)
-        elif self._work_type == 'test' or self._work_type == 'ensemble_test':
+        elif self._work_type == 'test':
             self._decoder = PredictiveDecoder(attention_dim=self._attention_dim,
                                               embed_dim=self._emb_dim,
                                               decoder_dim=self._decoder_dim,
                                               vocab_size=self._vocab_size)
-
+            self._decoder.to(self._device)
         self._encoder = Encoder()
+        self._encoder.to(self._device)
+
         self._encoder.fine_tune(self._fine_tune_encoder)
         self._encoder_optimizer = torch.optim.Adam(params=filter(lambda p: p.requires_grad,
                                                                  self._encoder.parameters()),
                                                    lr=self._encoder_lr) if self._fine_tune_encoder else None
-        self._encoder.to(self._device)
-        self._decoder.to(self._device)
         if torch.cuda.device_count() > 1:
             print("Let's use", torch.cuda.device_count(), "GPUs!")
             self._encoder = nn.DataParallel(self._encoder)
-        #    self._decoder = nn.DataParallel(self._decoder)
         self._criterion = nn.CrossEntropyLoss().to(self._device)
 
     def _clip_gradient(self, optimizer, grad_clip):
-        """
-        Clips gradients computed during backpropagation to avoid explosion of gradients.
 
-        :param optimizer: optimizer with the gradients to be clipped
-        :param grad_clip: clip value
-        """
         for group in optimizer.param_groups:
             for param in group['params']:
                 if param.grad is not None:
