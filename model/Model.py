@@ -222,7 +222,7 @@ class MSTS:
         with open('model/prediction_models.yaml') as f:
             p_configs = yaml.load(f)
 
-        for name, conf in enumerate(p_configs.value()):
+        for name, conf in enumerate(p_configs.values()):
             predictors.append(Predict(conf, name, reversed_token_map,
                                       self._decode_length, self._model_load_path))
 
