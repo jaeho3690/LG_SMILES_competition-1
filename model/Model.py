@@ -246,12 +246,12 @@ class MSTS:
             top_k = 3
             # result ensemble
             ms_to_fingerprint = [RDKFingerprint(x) for x in ms.values()]
-            combination_of_smiles = combinations(ms_to_fingerprint, 2)
+            combination_of_smiles = list(combinations(ms_to_fingerprint, 2))
             ms_to_index = [x for x in ms]
-            combination_index = combinations(ms_to_index, 2)
+            combination_index = list(combinations(ms_to_index, 2))
 
-            print('combination_of_smiles:', list(combination_of_smiles))
-            print('combination_index:', list(combination_index))
+            print('combination_of_smiles:', combination_of_smiles)
+            print('combination_index:', combination_index)
 
             smiles_dict = []
             for combination in combination_of_smiles:
