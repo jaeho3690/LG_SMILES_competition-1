@@ -7,11 +7,14 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
 class Encoder(nn.Module):
-    def __init__(self, encoded_image_size=14):
+    def __init__(self, encoded_image_size=14, model_type='wide_res'):
         super(Encoder, self).__init__()
         self.enc_image_size = encoded_image_size
 
-        resnet = torchvision.models.wide_resnet101_2(pretrained=True)  # pretrained ImageNet wide_ResNet-101_2
+        if model_type == 'wide_res':
+            resnet = torchvision.models.wide_resnet101_2(pretrained=True)  # pretrained ImageNet wide_ResNet-101_2
+        elif model_type == 'res':
+            resnet = torchvision.models.resnet152(pretrained=True)  # pretrained ImageNet wide_ResNet-101_2
         modules = list(resnet.children())[:-2]
         self.resnet = nn.Sequential(*modules)
         self.adaptive_pool = nn.AdaptiveAvgPool2d((encoded_image_size, encoded_image_size))

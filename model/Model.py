@@ -8,8 +8,11 @@ from PIL import Image
 
 from rdkit import Chem
 from rdkit import DataStructs
+from rdkit.DataStructs import FingerprintSimilarity as FPS
+from rdkit.Chem import MolFromSmiles,RDKFingerprint
 
 from model.Network import Encoder, DecoderWithAttention, PredictiveDecoder
+from model.Predictor import Predict
 from utils import make_directory, decode_predicted_sequences
 
 import random
@@ -17,11 +20,16 @@ import numpy as np
 import asyncio
 import os
 
+from itertools import combinations
+from collections import Counter
+import warnings
+
 
 class MSTS:
     def __init__(self, config):
         # self._data_folder = config.data_folder
         # self._data_name = config.data_name
+        self._config = config
         self._work_type = config.work_type
         self._seed = config.seed
 
@@ -207,24 +215,80 @@ class MSTS:
 
         return submission
 
-    def model_test_old(self, submission, test_loader, reversed_token_map):
 
-        self.model_load()
-        self._encoder.eval()
-        self._decoder.eval()
+    def ensemble_test(self, submission, data_list, reversed_token_map, transform):
+        predictors = []
+        encoder_type = ['wide_res', 'wide_res', 'res', 'res']
+        for name, type in enumerate(encoder_type):
+            predictors.append(Predict(self._config, name, type, reversed_token_map))
 
-        for i, imgs in enumerate(test_loader):
-            imgs = imgs.to(self._device)
+        fault_counter = 0
 
-            imgs = self._encoder(imgs)
-            predictions = self._decoder(imgs)
-            SMILES_predicted_sequence = list(torch.argmax(predictions.detach().cpu(), -1).numpy())[0]
-            decoded_sequences = decode_predicted_sequences(SMILES_predicted_sequence, reversed_token_map)
-            print('{}:, {}'.format(i, decoded_sequences))
-            submission['SMILES'].loc[i] = decoded_sequences
-            del (predictions)
+        for i, dat in enumerate(data_list):
+            imgs = Image.open(self._test_file_path + dat)
+            imgs = self.png_to_tensor(imgs)
+            imgs = transform(imgs).to(self._device)
+
+            # predict SMILES sequence form eqch predictors
+            preds = []
+            for p in predictors:
+                preds.append(p.SMILES_prediction(imgs))
+
+            # fault check
+            ms = {}
+            for idx, p in enumerate(preds):
+                m = MolFromSmiles(p)
+                if m != None:
+                    ms.update({idx:m})
+
+            if len(ms) == 0:
+                fault_counter += 1
+                ms.update({0:preds[0]})
+
+            top_k = 3
+            # result ensemble
+            ms_to_fingerprint = [RDKFingerprint(x) for x in ms.values()]
+            combination_of_smiles = combinations(ms_to_fingerprint, 2)
+            ms_to_index = [x for x in ms]
+            combination_index = combinations(ms_to_index, 2)
+
+            smiles_dict = []
+            for combination in combination_of_smiles:
+                smiles_dict.append(FPS(combination[0], combination[1]))
+            most_common_k = Counter(smiles_dict).most_common(top_k)
+
+            if most_common_k[0][1] == 1:
+                sequence = preds[combination_index[0][0][1]]
+            else:
+                first_common = Counter(most_common_k[0][0])
+                second_common = Counter(most_common_k[1][0])
+                combine = first_common + second_common
+                sequence = preds[combine.most_common(1)[0][0]]
+
+            submission.loc[submission['file_name'] == dat, 'SMILES'] = sequence
+            del(preds)
 
         return submission
+
+
+    # def model_test_old(self, submission, test_loader, reversed_token_map):
+    #
+    #     self.model_load()
+    #     self._encoder.eval()
+    #     self._decoder.eval()
+    #
+    #     for i, imgs in enumerate(test_loader):
+    #         imgs = imgs.to(self._device)
+    #
+    #         imgs = self._encoder(imgs)
+    #         predictions = self._decoder(imgs)
+    #         SMILES_predicted_sequence = list(torch.argmax(predictions.detach().cpu(), -1).numpy())[0]
+    #         decoded_sequences = decode_predicted_sequences(SMILES_predicted_sequence, reversed_token_map)
+    #         print('{}:, {}'.format(i, decoded_sequences))
+    #         submission['SMILES'].loc[i] = decoded_sequences
+    #         del (predictions)
+    #
+    #     return submission
 
     def png_to_tensor(self, img: Image):
         img = img.resize((256,256))
