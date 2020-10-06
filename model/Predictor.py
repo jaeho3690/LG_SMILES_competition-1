@@ -10,9 +10,9 @@ class Predict():
 
         self._vocab_size = 70
         self._decode_length = decode_length
-        self._emb_dim = config['emb_dim']
-        self._attention_dim = config['attention_dim']
-        self._decoder_dim = config['decoder_dim']
+        self._emb_dim = int(config['emb_dim'])
+        self._attention_dim = int(config['attention_dim'])
+        self._decoder_dim = int(config['decoder_dim'])
         self._reversed_token_map = reversed_token_map
 
         self._model_load_name = load_model_name
