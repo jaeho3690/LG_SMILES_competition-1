@@ -4,6 +4,7 @@ import torch.utils.data
 from model.Network import Encoder, PredictiveDecoder
 from utils import decode_predicted_sequences
 
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 class Predict():
     def __init__(self, config, load_model_name, reversed_token_map, decode_length, load_path):
@@ -23,6 +24,10 @@ class Predict():
                                           embed_dim=self._emb_dim,
                                           decoder_dim=self._decoder_dim,
                                           vocab_size=self._vocab_size)
+
+        self._encoder.to(device)
+        self._decoder.to(device)
+
         self.model_load()
         print(load_model_name, 'load successed!')
 
