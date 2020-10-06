@@ -232,7 +232,7 @@ class MSTS:
             for p in predictors:
                 preds.append(p.SMILES_prediction(imgs))
 
-            print('preds:', preds)
+            # print('preds:', preds)
 
             # fault check
             ms = {}
@@ -252,8 +252,8 @@ class MSTS:
             ms_to_index = [x for x in ms]
             combination_index = list(combinations(ms_to_index, 2))
 
-            print('combination_of_smiles:', combination_of_smiles)
-            print('combination_index:', combination_index)
+            # print('combination_of_smiles:', combination_of_smiles)
+            # print('combination_index:', combination_index)
 
             smiles_dict = {}
             for combination, index in zip(combination_of_smiles, combination_index):
@@ -263,7 +263,7 @@ class MSTS:
             smiles_dict = sorted(smiles_dict.items(), key=(lambda x: x[1]), reverse=True)
             # most_common_k = Counter(smiles_dict).most_common(top_k)
 
-            print('smiles_dict:', smiles_dict)
+            # print('smiles_dict:', smiles_dict)
 
             if smiles_dict[0][1] == 1.0:
                 sequence = preds[smiles_dict[0][0][0]]
@@ -272,7 +272,7 @@ class MSTS:
                 for i, (idx, value) in enumerate(smiles_dict):
                     score_board[list(idx)] = 4-i
 
-                print('score_board:', score_board)
+                # print('score_board:', score_board)
                 sequence = preds[np.argmax(score_board)]
 
             print('{} sequence:, {}'.format(i, sequence))
