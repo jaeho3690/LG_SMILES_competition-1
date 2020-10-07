@@ -221,7 +221,7 @@ class MSTS:
                                       self._decode_length, self._model_load_path))
 
         fault_counter = 0
-
+        sequence = None
         for i, dat in enumerate(data_list):
             imgs = Image.open(self._test_file_path + dat)
             imgs = self.png_to_tensor(imgs)
@@ -243,37 +243,41 @@ class MSTS:
 
             if len(ms) == 0:
                 fault_counter += 1
-                ms.update({0:preds[0]})
+                sequence = preds[0]
 
-            top_k = 3
-            # result ensemble
-            ms_to_fingerprint = [RDKFingerprint(x) for x in ms.values()]
-            combination_of_smiles = list(combinations(ms_to_fingerprint, 2))
-            ms_to_index = [x for x in ms]
-            combination_index = list(combinations(ms_to_index, 2))
+            elif len(ms) == 1:
+                sequence = preds[list(ms.keys())[0]]
 
-            # print('combination_of_smiles:', combination_of_smiles)
-            # print('combination_index:', combination_index)
-
-            smiles_dict = {}
-            for combination, index in zip(combination_of_smiles, combination_index):
-                smiles_dict[index] = (FPS(combination[0], combination[1]))
-
-            # sort by score
-            smiles_dict = sorted(smiles_dict.items(), key=(lambda x: x[1]), reverse=True)
-            # most_common_k = Counter(smiles_dict).most_common(top_k)
-
-            # print('smiles_dict:', smiles_dict)
-
-            if smiles_dict[0][1] == 1.0:
-                sequence = preds[smiles_dict[0][0][0]]
             else:
-                score_board = np.zeros(4)
-                for i, (idx, value) in enumerate(smiles_dict):
-                    score_board[list(idx)] = 4-i
+                top_k = 3
+                # result ensemble
+                ms_to_fingerprint = [RDKFingerprint(x) for x in ms.values()]
+                combination_of_smiles = list(combinations(ms_to_fingerprint, 2))
+                ms_to_index = [x for x in ms]
+                combination_index = list(combinations(ms_to_index, 2))
 
-                # print('score_board:', score_board)
-                sequence = preds[np.argmax(score_board)]
+                # print('combination_of_smiles:', combination_of_smiles)
+                # print('combination_index:', combination_index)
+
+                smiles_dict = {}
+                for combination, index in zip(combination_of_smiles, combination_index):
+                    smiles_dict[index] = (FPS(combination[0], combination[1]))
+
+                # sort by score
+                smiles_dict = sorted(smiles_dict.items(), key=(lambda x: x[1]), reverse=True)
+                # most_common_k = Counter(smiles_dict).most_common(top_k)
+
+                # print('smiles_dict:', smiles_dict)
+
+                if smiles_dict[0][1] == 1.0:
+                    sequence = preds[smiles_dict[0][0][0]]
+                else:
+                    score_board = np.zeros(4)
+                    for i, (idx, value) in enumerate(smiles_dict):
+                        score_board[list(idx)] = 4-i
+
+                    # print('score_board:', score_board)
+                    sequence = preds[np.argmax(score_board)]
 
             print('{} sequence:, {}'.format(i, sequence))
 
