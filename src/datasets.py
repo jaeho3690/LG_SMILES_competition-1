@@ -30,7 +30,7 @@ class SmilesDataset(Dataset):
             # Load sequence lengths (completely into memory)
             with open(data_folder/ f"{self.split}_SMILES_SEQUENCE_LENS_{base_file_name}.json", 'r') as j:
                 self.sequence_lens = json.load(j)
-            # Total number of datapoints
+
 
 
         else: #self.split in {'TEST'}
