@@ -112,20 +112,6 @@ elif config.work_type == 'ensemble_test':
     else:
         print('the test file path is none')
 
-# elif config.work_type == 'test_old':
-#     submission = pd.read_csv(sample_submission_dir)
-#     reversed_token_map= load_reversed_token_map(reversed_token_map_dir)
-#     test_loader = torch.utils.data.DataLoader(
-#         SmilesDataset(input_data_dir, base_file_name= None, split= 'TEST',
-#                       transform=transforms.Compose([normalize])),
-#         batch_size=1, shuffle=False,
-#         num_workers=config.workers, pin_memory=True)
-#
-#     model.model_load()
-#     print('model loaded')
-#     submission = model.model_test_old(submission, test_loader,reversed_token_map)
-#     submission.to_csv('sample_submission.csv',index=False)
-
 else:
     print('incorrect work type received.')
 

@@ -28,8 +28,7 @@ import warnings
 
 class MSTS:
     def __init__(self, config):
-        # self._data_folder = config.data_folder
-        # self._data_name = config.data_name
+
         self._work_type = config.work_type
         self._seed = config.seed
 
@@ -293,26 +292,6 @@ class MSTS:
         print('total fault:', fault_counter)
         print('model contribution:', model_contribution)
         return submission
-
-
-    # def model_test_old(self, submission, test_loader, reversed_token_map):
-    #
-    #     self.model_load()
-    #     self._encoder.eval()
-    #     self._decoder.eval()
-    #
-    #     for i, imgs in enumerate(test_loader):
-    #         imgs = imgs.to(self._device)
-    #
-    #         imgs = self._encoder(imgs)
-    #         predictions = self._decoder(imgs)
-    #         SMILES_predicted_sequence = list(torch.argmax(predictions.detach().cpu(), -1).numpy())[0]
-    #         decoded_sequences = decode_predicted_sequences(SMILES_predicted_sequence, reversed_token_map)
-    #         print('{}:, {}'.format(i, decoded_sequences))
-    #         submission['SMILES'].loc[i] = decoded_sequences
-    #         del (predictions)
-    #
-    #     return submission
 
     def png_to_tensor(self, img: Image):
         img = img.resize((256,256))
