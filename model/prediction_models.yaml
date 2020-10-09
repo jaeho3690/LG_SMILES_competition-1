@@ -25,3 +25,10 @@ model4:
   decoder_dim: 256
   encoder_type: res
   load_model_name: 3
+
+model5:
+  emb_dim: 256
+  attention_dim: 256
+  decoder_dim: 256
+  encoder_type: resnext
+  load_model_name: 4

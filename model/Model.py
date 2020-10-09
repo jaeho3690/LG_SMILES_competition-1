@@ -176,7 +176,9 @@ class MSTS:
         return mean_loss, mean_accuracy
 
     def model_test(self, submission, data_list, reversed_token_map, transform):
-
+        print('model_test')
+        self._encoder.to(self._device)
+        self._decoder.to(self._device)
         self._encoder.eval()
         self._decoder.eval()
 
@@ -212,7 +214,6 @@ class MSTS:
 
     def ensemble_test(self, submission, data_list, reversed_token_map, transform):
         predictors = []
-        encoder_type = ['wide_res', 'wide_res', 'res', 'res']
         with open('model/prediction_models.yaml') as f:
             p_configs = yaml.load(f)
 
@@ -220,8 +221,10 @@ class MSTS:
             predictors.append(Predict(conf, reversed_token_map,
                                       self._decode_length, self._model_load_path))
 
+        conf_len = len(p_configs)
         fault_counter = 0
         sequence = None
+        model_contribution = np.zeros(conf_len)
         for i, dat in enumerate(data_list):
             imgs = Image.open(self._test_file_path + dat)
             imgs = self.png_to_tensor(imgs)
@@ -246,10 +249,11 @@ class MSTS:
                 sequence = preds[0]
 
             elif len(ms) == 1:
+                print('decode fail')
                 sequence = preds[list(ms.keys())[0]]
 
             else:
-                top_k = 3
+                top_k = 4
                 # result ensemble
                 ms_to_fingerprint = [RDKFingerprint(x) for x in ms.values()]
                 combination_of_smiles = list(combinations(ms_to_fingerprint, 2))
@@ -272,18 +276,22 @@ class MSTS:
                 if smiles_dict[0][1] == 1.0:
                     sequence = preds[smiles_dict[0][0][0]]
                 else:
-                    score_board = np.zeros(4)
+                    score_board = np.zeros(conf_len)
                     for i, (idx, value) in enumerate(smiles_dict):
-                        score_board[list(idx)] = 4-i
+                        score_board[list(idx)] += value
 
                     # print('score_board:', score_board)
+                    pick = int(np.argmax(score_board))
+                    sequence = preds[pick]
+                    model_contribution[pick] += 1
                     sequence = preds[np.argmax(score_board)]
 
             print('{} sequence:, {}'.format(i, sequence))
 
             submission.loc[submission['file_name'] == dat, 'SMILES'] = sequence
             del(preds)
-
+        print('total fault:', fault_counter)
+        print('model contribution:', model_contribution)
         return submission
 
 
@@ -310,7 +318,7 @@ class MSTS:
         img = img.resize((256,256))
         img = np.array(img)
         img = np.moveaxis(img, 2, 0)
-        return torch.FloatTensor(img) / 255.
+        return torch.FloatTensor(img).to(self._device) / 255.
 
     def is_smiles(self, sequence):
         m = Chem.MolFromSmiles(sequence)
@@ -331,10 +339,10 @@ class MSTS:
     def model_load(self):
         self._decoder.load_state_dict(
             torch.load('{}/decoder{}.pkl'.format(self._model_load_path, str(self._model_load_num).zfill(3)))
-        )
+        ) 
         self._encoder.load_state_dict(
             torch.load('{}/encoder{}.pkl'.format(self._model_load_path, str(self._model_load_num).zfill(3)))
-        )
+        ) 
 
     def _model_name_maker(self):
         name = 'model-emb_dim_{}-attention_dim_{}-decoder_dim_{}-dropout_{}-batch_size_{}'.format(

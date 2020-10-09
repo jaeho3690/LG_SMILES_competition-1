@@ -3,11 +3,11 @@ import torch
 from torch import nn
 import torchvision
 
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+device = torch.device("cuda:1" if torch.cuda.is_available() else "cpu")
 
 
 class Encoder(nn.Module):
-    def __init__(self, encoded_image_size=14, model_type='wide_res'):
+    def __init__(self, encoded_image_size=14, model_type='resnext'):
         super(Encoder, self).__init__()
         self.enc_image_size = encoded_image_size
 
@@ -15,6 +15,8 @@ class Encoder(nn.Module):
             resnet = torchvision.models.wide_resnet101_2(pretrained=True)  # pretrained ImageNet wide_ResNet-101_2
         elif model_type == 'res':
             resnet = torchvision.models.resnet152(pretrained=True)  # pretrained ImageNet wide_ResNet152
+        elif model_type == 'resnext':
+            resnet = torchvision.models.resnext101_32x8d(pretrained=True)  # pretrained ImageNet wide_ResNet-101_2
         modules = list(resnet.children())[:-2]
         self.resnet = nn.Sequential(*modules)
         self.adaptive_pool = nn.AdaptiveAvgPool2d((encoded_image_size, encoded_image_size))
@@ -94,11 +96,11 @@ class PredictiveDecoder(nn.Module):
 
         # embed start tocken for LSTM input
         start_tockens = torch.ones(batch_size, dtype=torch.long).to(device) * 68
-        embeddings = self.embedding(start_tockens)
+        embeddings = self.embedding(start_tockens).to(device)
 
         h, c = self.init_hidden_state(encoder_out)  # (batch_size, decoder_dim)
 
-        predictions = torch.zeros(batch_size, decode_lengths, vocab_size).to(device)
+        predictions = torch.zeros(batch_size, decode_lengths, vocab_size)
 
         for t in range(decode_lengths):
             attention_weighted_encoding, alpha = self.attention(encoder_out, h)

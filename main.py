@@ -23,7 +23,7 @@ parser.add_argument('--emb_dim', type=int, default=512, help='dimension of word 
 parser.add_argument('--attention_dim', type=int, default=512, help='dimension of attention linear layers')
 parser.add_argument('--decoder_dim', type=int, default=512, help='dimension of decoder RNN')
 parser.add_argument('--dropout', type=float, default=0.5, help='droup out rate')
-parser.add_argument('--device', type=str, default='cuda', help='sets device for model and PyTorch tensors')
+parser.add_argument('--device', type=str, default='cuda:1', help='sets device for model and PyTorch tensors')
 parser.add_argument('--cudnn_benchmark', type=bool, default=True, help='set to true only if inputs to model are fixed size; otherwise lot of computational overhead')
 
 parser.add_argument('--start_epoch', type=int, default=0, help='number of start epoch')
@@ -43,8 +43,8 @@ parser.add_argument('--model_save_path', type=str, default='graph_save', help='m
 # parser.add_argument('--model_load_path', type=str, default=None, help='model load path')
 # parser.add_argument('--model_load_num', type=int, default=None, help='epoch number of saved model')
 # parser.add_argument('--test_file_path', type=str, default=None, help='test file path')
-parser.add_argument('--model_load_path', type=str, default='/home/hjyang/final_model', help='model load path')
-parser.add_argument('--model_load_num', type=int, default=8, help='epoch number of saved model')
+parser.add_argument('--model_load_path', type=str, default='/home/hjyang/final_model_1', help='model load path')
+parser.add_argument('--model_load_num', type=int, default=6, help='epoch number of saved model')
 parser.add_argument('--test_file_path', type=str, default='/home/hjyang/test/', help='test file path')
 
 config = parser.parse_args()
@@ -107,7 +107,7 @@ elif config.work_type == 'ensemble_test':
 
         transform = transforms.Compose([normalize])
         submission = model.ensemble_test(submission, data_list, reversed_token_map, transform)
-        submission.to_csv('sample_submission.csv', index=False)
+        submission.to_csv('sample_submission2.csv', index=False)
 
     else:
         print('the test file path is none')
