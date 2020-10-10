@@ -24,7 +24,7 @@ parser.add_argument('--emb_dim', type=int, default=512, help='dimension of word 
 parser.add_argument('--attention_dim', type=int, default=512, help='dimension of attention linear layers')
 parser.add_argument('--decoder_dim', type=int, default=512, help='dimension of decoder RNN')
 parser.add_argument('--dropout', type=float, default=0.5, help='droup out rate')
-parser.add_argument('--device', type=str, default='cuda:1', help='sets device for model and PyTorch tensors')
+parser.add_argument('--device', type=str, default='cuda', help='sets device for model and PyTorch tensors')
 parser.add_argument('--cudnn_benchmark', type=bool, default=True, help='set to true only if inputs to model are fixed size; otherwise lot of computational overhead')
 
 parser.add_argument('--start_epoch', type=int, default=0, help='number of start epoch')

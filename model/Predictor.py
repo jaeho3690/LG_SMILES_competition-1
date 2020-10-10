@@ -3,7 +3,7 @@ import torch.utils.data
 from model.Network import Encoder, PredictiveDecoder
 from utils import decode_predicted_sequences
 
-device = torch.device("cuda:1" if torch.cuda.is_available() else "cpu")
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 class Predict():
     """
