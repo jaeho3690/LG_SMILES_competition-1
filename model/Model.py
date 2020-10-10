@@ -340,10 +340,12 @@ class MSTS:
 
     def model_load(self):
         self._decoder.load_state_dict(
-            torch.load('{}/decoder{}.pkl'.format(self._model_load_path, str(self._model_load_num)))
+            torch.load('{}/decoder{}.pkl'.format(self._model_load_path, str(self._model_load_num)),
+                       map_location=self._device)
         ) 
         self._encoder.load_state_dict(
-            torch.load('{}/encoder{}.pkl'.format(self._model_load_path, str(self._model_load_num)))
+            torch.load('{}/encoder{}.pkl'.format(self._model_load_path, str(self._model_load_num)),
+                       map_location=self._device)
         ) 
 
     def _model_name_maker(self):

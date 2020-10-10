@@ -64,10 +64,12 @@ class Predict():
 
     def model_load(self):
         self._decoder.load_state_dict(
-            torch.load('{}/decoder{}.pkl'.format(self._model_load_path, self._model_load_name))
+            torch.load('{}/decoder{}.pkl'.format(self._model_load_path, self._model_load_name),
+                       map_location=self._device)
         )
 
-        weight_data = torch.load('{}/encoder{}.pkl'.format(self._model_load_path, self._model_load_name))
+        weight_data = torch.load('{}/encoder{}.pkl'.format(self._model_load_path, self._model_load_name),
+                                 map_location=self._device)
         new_keys = [x[7:] for x in list(weight_data.keys())]
         encoder_weight = {}
         for key, n_key in zip(weight_data.keys(), new_keys):
