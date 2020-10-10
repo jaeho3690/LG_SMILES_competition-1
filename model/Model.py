@@ -322,20 +322,20 @@ class MSTS:
         torch.save(
             self._decoder.state_dict(),
             '../' + '{}/'.format(self._model_save_path) + self._model_name + '/decoder{}.pkl'.format(
-                str(save_num).zfill(3))
+                str(save_num))
         )
         torch.save(
             self._encoder.state_dict(),
             '../' + '{}/'.format(self._model_save_path) + self._model_name + '/encoder{}.pkl'.format(
-                str(save_num).zfill(3))
+                str(save_num))
         )
 
     def model_load(self):
         self._decoder.load_state_dict(
-            torch.load('{}/decoder{}.pkl'.format(self._model_load_path, str(self._model_load_num).zfill(3)))
+            torch.load('{}/decoder{}.pkl'.format(self._model_load_path, str(self._model_load_num)))
         ) 
         self._encoder.load_state_dict(
-            torch.load('{}/encoder{}.pkl'.format(self._model_load_path, str(self._model_load_num).zfill(3)))
+            torch.load('{}/encoder{}.pkl'.format(self._model_load_path, str(self._model_load_num)))
         ) 
 
     def _model_name_maker(self):
