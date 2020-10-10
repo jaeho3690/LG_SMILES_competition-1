@@ -120,12 +120,12 @@ class PredictiveDecoder(nn.Module):
 
         # embed start tocken for LSTM input
         start_tockens = torch.ones(batch_size, dtype=torch.long).to(self.device) * 68
-        embeddings = self.embedding(start_tockens).to(self.device)
+        embeddings = self.embedding(start_tockens)
 
         # initialize hidden state and cell state of LSTM cell
         h, c = self.init_hidden_state(encoder_out)  # (batch_size, decoder_dim)
 
-        predictions = torch.zeros(batch_size, decode_lengths, vocab_size)
+        predictions = torch.zeros(batch_size, decode_lengths, vocab_size).to(self.device)
 
         # predict sequence
         for t in range(decode_lengths):
