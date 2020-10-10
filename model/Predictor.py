@@ -34,8 +34,8 @@ class Predict():
                                           vocab_size=self._vocab_size,
                                           device=self._device)
 
-        self._encoder.to(self._device)
-        self._decoder.to(self._device)
+        self._encoder.to(self._device, non_blocking=True)
+        self._decoder.to(self._device, non_blocking=True)
 
         self.model_load()
         print(self._model_load_name, 'load successed!')

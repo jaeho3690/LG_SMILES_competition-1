@@ -79,11 +79,12 @@ class MSTS:
                                               embed_dim=self._emb_dim,
                                               decoder_dim=self._decoder_dim,
                                               vocab_size=self._vocab_size,
+
                                               device=self._device)
-            self._decoder.to(self._device)
+        self._decoder.to(self._device, non_blocking=True)
 
         self._encoder = Encoder(model_type=config.encoder_type)
-        self._encoder.to(self._device)
+        self._encoder.to(self._device, non_blocking=True)
         self._encoder.fine_tune(self._fine_tune_encoder)
         self._encoder_optimizer = torch.optim.Adam(params=filter(lambda p: p.requires_grad,
                                                                  self._encoder.parameters()),
@@ -91,7 +92,7 @@ class MSTS:
         if torch.cuda.device_count() > 1 and self._device != 'cpu':
             print("Let's use", torch.cuda.device_count(), "GPUs!")
             self._encoder = nn.DataParallel(self._encoder)
-        self._criterion = nn.CrossEntropyLoss().to(self._device)
+        self._criterion = nn.CrossEntropyLoss().to(self._device, non_blocking=True)
 
     def _clip_gradient(self, optimizer, grad_clip):
         for group in optimizer.param_groups:
