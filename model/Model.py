@@ -88,7 +88,7 @@ class MSTS:
         self._encoder_optimizer = torch.optim.Adam(params=filter(lambda p: p.requires_grad,
                                                                  self._encoder.parameters()),
                                                    lr=self._encoder_lr) if self._fine_tune_encoder else None
-        if torch.cuda.device_count() > 1:
+        if torch.cuda.device_count() > 1 and self._device != 'cpu':
             print("Let's use", torch.cuda.device_count(), "GPUs!")
             self._encoder = nn.DataParallel(self._encoder)
         self._criterion = nn.CrossEntropyLoss().to(self._device)
