@@ -69,7 +69,8 @@ class MSTS:
                                                  embed_dim=self._emb_dim,
                                                  decoder_dim=self._decoder_dim,
                                                  vocab_size=self._vocab_size,
-                                                 dropout=self._dropout)
+                                                 dropout=self._dropout,
+                                                 device=self._device)
             self._decoder_optimizer = torch.optim.Adam(params=filter(lambda p: p.requires_grad,
                                                                      self._decoder.parameters()),
                                                        lr=self._decoder_lr)
@@ -77,7 +78,8 @@ class MSTS:
             self._decoder = PredictiveDecoder(attention_dim=self._attention_dim,
                                               embed_dim=self._emb_dim,
                                               decoder_dim=self._decoder_dim,
-                                              vocab_size=self._vocab_size)
+                                              vocab_size=self._vocab_size,
+                                              device=self._device)
             self._decoder.to(self._device)
 
         self._encoder = Encoder(model_type=config.encoder_type)

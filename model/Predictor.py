@@ -5,8 +5,6 @@ import torch.utils.data
 from model.Network import Encoder, PredictiveDecoder
 from utils import decode_predicted_sequences
 
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
 class Predict():
     """
     A predict class that receives image data and return decoded sequence
@@ -24,6 +22,7 @@ class Predict():
         self._attention_dim = int(config['attention_dim'])
         self._decoder_dim = int(config['decoder_dim'])
         self._reversed_token_map = reversed_token_map
+        self._device = config.device
 
         self._model_load_name = config['load_model_name']
         self._model_load_path = load_path
@@ -32,10 +31,11 @@ class Predict():
         self._decoder = PredictiveDecoder(attention_dim=self._attention_dim,
                                           embed_dim=self._emb_dim,
                                           decoder_dim=self._decoder_dim,
-                                          vocab_size=self._vocab_size)
+                                          vocab_size=self._vocab_size,
+                                          device=self._device)
 
-        self._encoder.to(device)
-        self._decoder.to(device)
+        self._encoder.to(self._device)
+        self._decoder.to(self._device)
 
         self.model_load()
         print(self._model_load_name, 'load successed!')

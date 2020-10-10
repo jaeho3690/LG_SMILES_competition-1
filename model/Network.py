@@ -3,8 +3,6 @@ import torch
 from torch import nn
 import torchvision
 
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
 
 class Encoder(nn.Module):
     """
@@ -76,7 +74,7 @@ class PredictiveDecoder(nn.Module):
     """
     Decoder network with attention network used for decode smile sequence from image
     """
-    def __init__(self, attention_dim, embed_dim, decoder_dim, vocab_size, encoder_dim=2048, dropout=1.):
+    def __init__(self, attention_dim, embed_dim, decoder_dim, vocab_size, device, encoder_dim=2048, dropout=1.):
         """
         :param attention_dim: input size of attention network
         :param embed_dim: input size of embedding network
@@ -93,6 +91,7 @@ class PredictiveDecoder(nn.Module):
         self.decoder_dim = decoder_dim
         self.vocab_size = vocab_size
         self.dropout = dropout
+        self.device = device
 
         self.attention = Attention(encoder_dim, decoder_dim, attention_dim)  # attention network
 
@@ -120,8 +119,8 @@ class PredictiveDecoder(nn.Module):
         num_pixels = encoder_out.size(1)
 
         # embed start tocken for LSTM input
-        start_tockens = torch.ones(batch_size, dtype=torch.long).to(device) * 68
-        embeddings = self.embedding(start_tockens).to(device)
+        start_tockens = torch.ones(batch_size, dtype=torch.long).to(self.device) * 68
+        embeddings = self.embedding(start_tockens).to(self.device)
 
         # initialize hidden state and cell state of LSTM cell
         h, c = self.init_hidden_state(encoder_out)  # (batch_size, decoder_dim)
@@ -154,7 +153,7 @@ class DecoderWithAttention(nn.Module):
     Decoder network with attention network used for training
     """
 
-    def __init__(self, attention_dim, embed_dim, decoder_dim, vocab_size, encoder_dim=2048, dropout=0.5):
+    def __init__(self, attention_dim, embed_dim, decoder_dim, vocab_size, device, encoder_dim=2048, dropout=0.5):
         """
         :param attention_dim: input size of attention network
         :param embed_dim: input size of embedding network
@@ -171,6 +170,7 @@ class DecoderWithAttention(nn.Module):
         self.decoder_dim = decoder_dim
         self.vocab_size = vocab_size
         self.dropout = dropout
+        self.device = device
 
         self.attention = Attention(encoder_dim, decoder_dim, attention_dim)  # attention network
 
@@ -228,8 +228,8 @@ class DecoderWithAttention(nn.Module):
         # set decode length by caption length - 1 because of omitting start token
         decode_lengths = (caption_lengths - 1).tolist()
 
-        predictions = torch.zeros(batch_size, max(decode_lengths), vocab_size).to(device)
-        alphas = torch.zeros(batch_size, max(decode_lengths), num_pixels).to(device)
+        predictions = torch.zeros(batch_size, max(decode_lengths), vocab_size).to(self.device)
+        alphas = torch.zeros(batch_size, max(decode_lengths), num_pixels).to(self.device)
 
         # predict sequence
         for t in range(max(decode_lengths)):
