@@ -1,3 +1,5 @@
+import asyncio
+
 import torch.optim
 import torch.utils.data
 from model.Network import Encoder, PredictiveDecoder
@@ -38,7 +40,7 @@ class Predict():
         self.model_load()
         print(self._model_load_name, 'load successed!')
 
-    def SMILES_prediction(self, img):
+    async def SMILES_prediction(self, img):
         """
         :param img: preprocessed image data
         :return: the decoded sequence of molecule image with SMILES format

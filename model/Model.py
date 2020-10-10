@@ -232,6 +232,10 @@ class MSTS:
             predictors.append(Predict(conf, reversed_token_map,
                                       self._decode_length, self._model_load_path))
 
+        loop = asyncio.get_event_loop()
+        async def process_async(imgs):
+            return [await p.SMILES_prediction(imgs) for p in predictors]
+
         conf_len = len(p_configs)  # configure length == number of model to use
         fault_counter = 0
         sequence = None
@@ -242,9 +246,10 @@ class MSTS:
             imgs = transform(imgs).to(self._device)
 
             # predict SMILES sequence form each predictors
-            preds = []
-            for p in predictors:
-                preds.append(p.SMILES_prediction(imgs))
+            # preds = []
+            # for p in predictors:
+            #     preds.append(p.SMILES_prediction(imgs))
+            preds = loop.run_until_complete(process_async(imgs))
 
             # fault check: whether the prediction satisfies the SMILES format or not
             ms = {}
@@ -294,6 +299,7 @@ class MSTS:
             submission.loc[submission['file_name'] == dat, 'SMILES'] = sequence
             del(preds)
 
+        loop.close()
         print('total fault:', fault_counter)
         print('model contribution:', model_contribution)
         return submission
