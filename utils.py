@@ -52,3 +52,12 @@ def smiles_name_print():
     print(' \ \___  \\\\ \ \-./\ \\\\ \ \\\\ \ \____\ \  __\ \ \___  \  ')
     print('  \/\_____\\\\ \_\ \ \_\\\\ \_\\\\ \_____\\\\ \_____\\\\/\_____\ ')
     print('   \/_____/ \/_/  \/_/ \/_/ \/_____/ \/_____/ \/_____/ ')
+
+
+def str2bool(v):
+    if v.lower() in ['true', 1]:
+        return True
+    elif v.lower() in ['false', 0]:
+        return False
+    else:
+        raise argparse.ArgumentTypeError('Boolean value expected.')

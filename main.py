@@ -8,7 +8,7 @@ import time
 from model.Model import MSTS
 from src.datasets import SmilesDataset
 from src.config import input_data_dir, base_file_name, sample_submission_dir, reversed_token_map_dir
-from utils import logger, make_directory, load_reversed_token_map, smiles_name_print
+from utils import logger, make_directory, load_reversed_token_map, smiles_name_print, str2bool
 
 start_time = time.time()
 
@@ -25,8 +25,8 @@ parser.add_argument('--attention_dim', type=int, default=512, help='dimension of
 parser.add_argument('--decoder_dim', type=int, default=512, help='dimension of decoder RNN')
 parser.add_argument('--dropout', type=float, default=0.5, help='droup out rate')
 parser.add_argument('--device', type=str, default='cuda', help='sets device for model and PyTorch tensors')
-parser.add_argument('--gpu_non_block', type=bool, default=True, help='GPU non blocking flag')
-parser.add_argument('--cudnn_benchmark', type=bool, default=True, help='set to true only if inputs to model are fixed size; otherwise lot of computational overhead')
+parser.add_argument('--gpu_non_block', type=str2bool, default=True, help='GPU non blocking flag')
+parser.add_argument('--cudnn_benchmark', type=str2bool, default=True, help='set to true only if inputs to model are fixed size; otherwise lot of computational overhead')
 
 parser.add_argument('--start_epoch', type=int, default=0, help='number of start epoch')
 parser.add_argument('--epochs', type=int, default=50, help='number of epochs to train for')
@@ -39,7 +39,7 @@ parser.add_argument('--grad_clip', type=float, default=5., help='clip gradients 
 parser.add_argument('--alpha_c', type=float, default=1., help="regularization parameter for 'doubly stochastic attention', as in the paper")
 parser.add_argument('--best_bleu4', type=float, default=0., help='BLEU-4 score right now')
 parser.add_argument('--print_freq', type=int, default=100, help='print training/balidation stats every __ batches')
-parser.add_argument('--fine_tune_encoder', type=bool, default=True, help='fine-tune encoder')
+parser.add_argument('--fine_tune_encoder', type=str2bool, default=True, help='fine-tune encoder')
 
 parser.add_argument('--model_save_path', type=str, default='graph_save', help='model save path')
 # parser.add_argument('--model_load_path', type=str, default=None, help='model load path')
