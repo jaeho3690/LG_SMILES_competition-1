@@ -80,7 +80,7 @@ class MSTS:
                                               vocab_size=self._vocab_size)
             self._decoder.to(self._device)
 
-        self._encoder = Encoder()
+        self._encoder = Encoder(model_type=config.encoder_type)
         self._encoder.to(self._device)
         self._encoder.fine_tune(self._fine_tune_encoder)
         self._encoder_optimizer = torch.optim.Adam(params=filter(lambda p: p.requires_grad,

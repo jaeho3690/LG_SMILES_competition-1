@@ -16,6 +16,7 @@ smiles_name_print()
 parser = argparse.ArgumentParser()
 
 parser.add_argument('--work_type', type=str, default='train', help="choose work type 'train' or 'test'")
+parser.add_argument('--encoder_type', type=str, default='wide_res', help="choose encoder model type 'wide_res', 'res', and 'resnext' ")
 parser.add_argument('--seed', type=int, default=1, help="choose seed number")
 
 parser.add_argument('--decode_length', type=int, default=140, help='length of decoded SMILES sequence')

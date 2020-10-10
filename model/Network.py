@@ -10,7 +10,7 @@ class Encoder(nn.Module):
     """
     Encoder network
     """
-    def __init__(self, encoded_image_size=14, model_type='resnext'):
+    def __init__(self, encoded_image_size=14, model_type='wide_res'):
         """
         :param encoded_image_size: size of preprocessed image data
         :param model_type: select encoder model type from 'wide resnet', 'resnet', and 'resnext'
