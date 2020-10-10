@@ -39,6 +39,7 @@ class MSTS:
         self._decoder_dim = config.decoder_dim
         self._dropout = config.dropout
         self._device = config.device
+        self._gpu_non_block = config.gpu_non_block
         self._cudnn_benchmark = config.cudnn_benchmark
 
         self._start_epoch = config.start_epoch
@@ -71,7 +72,7 @@ class MSTS:
                                                  vocab_size=self._vocab_size,
                                                  dropout=self._dropout,
                                                  device=self._device)
-            self._decoder.to(self._device, non_blocking=True)
+            self._decoder.to(self._device, non_blocking=self._gpu_non_block)
             self._decoder_optimizer = torch.optim.Adam(params=filter(lambda p: p.requires_grad,
                                                                      self._decoder.parameters()),
                                                        lr=self._decoder_lr)
@@ -82,10 +83,10 @@ class MSTS:
                                               vocab_size=self._vocab_size,
 
                                               device=self._device)
-            self._decoder.to(self._device, non_blocking=True)
+            self._decoder.to(self._device, non_blocking=self._gpu_non_block)
 
         self._encoder = Encoder(model_type=config.encoder_type)
-        self._encoder.to(self._device, non_blocking=True)
+        self._encoder.to(self._device, non_blocking=self._gpu_non_block)
         self._encoder.fine_tune(self._fine_tune_encoder)
         self._encoder_optimizer = torch.optim.Adam(params=filter(lambda p: p.requires_grad,
                                                                  self._encoder.parameters()),
@@ -93,7 +94,7 @@ class MSTS:
         if torch.cuda.device_count() > 1 and self._device != 'cpu':
             print("Let's use", torch.cuda.device_count(), "GPUs!")
             self._encoder = nn.DataParallel(self._encoder)
-        self._criterion = nn.CrossEntropyLoss().to(self._device, non_blocking=True)
+        self._criterion = nn.CrossEntropyLoss().to(self._device, non_blocking=self._gpu_non_block)
 
     def _clip_gradient(self, optimizer, grad_clip):
         for group in optimizer.param_groups:
@@ -234,6 +235,7 @@ class MSTS:
 
         for conf in p_configs.values():
             predictors.append(Predict(conf, reversed_token_map, self._device,
+                                      self._gpu_non_block,
                                       self._decode_length, self._model_load_path))
 
         loop = asyncio.get_event_loop()

@@ -9,7 +9,7 @@ class Predict():
     """
     A predict class that receives image data and return decoded sequence
     """
-    def __init__(self, config, reversed_token_map, device, decode_length, load_path):
+    def __init__(self, config, reversed_token_map, gpu_non_block, device, decode_length, load_path):
         """
         :param config: configure data
         :param reversed_token_map: converts prediction to readable format
@@ -34,8 +34,8 @@ class Predict():
                                           vocab_size=self._vocab_size,
                                           device=self._device)
 
-        self._encoder.to(self._device, non_blocking=True)
-        self._decoder.to(self._device, non_blocking=True)
+        self._encoder.to(self._device, non_blocking=gpu_non_block)
+        self._decoder.to(self._device, non_blocking=gpu_non_block)
 
         self.model_load()
         print(self._model_load_name, 'load successed!')
