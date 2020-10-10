@@ -82,7 +82,7 @@ if config.work_type == 'train':
         logger([t_l, t_a, v_l, v_a])
 
 
-elif config.work_type == 'test':
+elif config.work_type == 'single_test':
     if not config.test_file_path == None:
 
         submission = pd.read_csv(sample_submission_dir)

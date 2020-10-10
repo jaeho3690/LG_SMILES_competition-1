@@ -3,11 +3,18 @@ import torch
 from torch import nn
 import torchvision
 
-device = torch.device("cuda:1" if torch.cuda.is_available() else "cpu")
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
 class Encoder(nn.Module):
+    """
+    Encoder network
+    """
     def __init__(self, encoded_image_size=14, model_type='resnext'):
+        """
+        :param encoded_image_size: size of preprocessed image data
+        :param model_type: select encoder model type from 'wide resnet', 'resnet', and 'resnext'
+        """
         super(Encoder, self).__init__()
         self.enc_image_size = encoded_image_size
 
@@ -39,7 +46,15 @@ class Encoder(nn.Module):
 
 
 class Attention(nn.Module):
+    """
+    Attention network for calculate attention value
+    """
     def __init__(self, encoder_dim, decoder_dim, attention_dim):
+        """
+        :param encoder_dim: input size of encoder network
+        :param decoder_dim: input size of decoder network
+        :param attention_dim: input size of attention network
+        """
         super(Attention, self).__init__()
         self.encoder_att = nn.Linear(encoder_dim, attention_dim)  # linear layer to transform encoded image
         self.decoder_att = nn.Linear(decoder_dim, attention_dim)  # linear layer to transform decoder's output
@@ -58,7 +73,18 @@ class Attention(nn.Module):
 
 
 class PredictiveDecoder(nn.Module):
+    """
+    Decoder network with attention network used for decode smile sequence from image
+    """
     def __init__(self, attention_dim, embed_dim, decoder_dim, vocab_size, encoder_dim=2048, dropout=1.):
+        """
+        :param attention_dim: input size of attention network
+        :param embed_dim: input size of embedding network
+        :param decoder_dim: input size of decoder network
+        :param vocab_size: total number of characters used in training
+        :param encoder_dim: input size of encoder network
+        :param dropout: dropout rate
+        """
         super(PredictiveDecoder, self).__init__()
 
         self.encoder_dim = encoder_dim
@@ -90,7 +116,6 @@ class PredictiveDecoder(nn.Module):
         encoder_dim = encoder_out.size(-1)
         vocab_size = self.vocab_size
 
-        # Flatten image
         encoder_out = encoder_out.view(batch_size, -1, encoder_dim)  # (batch_size, num_pixels, encoder_dim)
         num_pixels = encoder_out.size(1)
 
@@ -98,10 +123,12 @@ class PredictiveDecoder(nn.Module):
         start_tockens = torch.ones(batch_size, dtype=torch.long).to(device) * 68
         embeddings = self.embedding(start_tockens).to(device)
 
+        # initialize hidden state and cell state of LSTM cell
         h, c = self.init_hidden_state(encoder_out)  # (batch_size, decoder_dim)
 
         predictions = torch.zeros(batch_size, decode_lengths, vocab_size)
 
+        # predict sequence
         for t in range(decode_lengths):
             attention_weighted_encoding, alpha = self.attention(encoder_out, h)
 
@@ -123,8 +150,19 @@ class PredictiveDecoder(nn.Module):
 
 
 class DecoderWithAttention(nn.Module):
+    """
+    Decoder network with attention network used for training
+    """
 
     def __init__(self, attention_dim, embed_dim, decoder_dim, vocab_size, encoder_dim=2048, dropout=0.5):
+        """
+        :param attention_dim: input size of attention network
+        :param embed_dim: input size of embedding network
+        :param decoder_dim: input size of decoder network
+        :param vocab_size: total number of characters used in training
+        :param encoder_dim: input size of encoder network
+        :param dropout: dropout rate
+        """
         super(DecoderWithAttention, self).__init__()
 
         self.encoder_dim = encoder_dim
@@ -165,6 +203,11 @@ class DecoderWithAttention(nn.Module):
         return h, c
 
     def forward(self, encoder_out, encoded_captions, caption_lengths):
+        """
+        :param encoder_out: output of encoder network
+        :param encoded_captions: transformed sequence from character to integer
+        :param caption_lengths: length of transformed sequence
+        """
         batch_size = encoder_out.size(0)
         encoder_dim = encoder_out.size(-1)
         vocab_size = self.vocab_size
@@ -176,15 +219,19 @@ class DecoderWithAttention(nn.Module):
         encoder_out = encoder_out[sort_ind]
         encoded_captions = encoded_captions[sort_ind]
 
+        # embedding transformed sequence for vector
         embeddings = self.embedding(encoded_captions)  # (batch_size, max_caption_length, embed_dim)
 
+        # initialize hidden state and cell state of LSTM cell
         h, c = self.init_hidden_state(encoder_out)  # (batch_size, decoder_dim)
 
+        # set decode length by caption length - 1 because of omitting start token
         decode_lengths = (caption_lengths - 1).tolist()
 
         predictions = torch.zeros(batch_size, max(decode_lengths), vocab_size).to(device)
         alphas = torch.zeros(batch_size, max(decode_lengths), num_pixels).to(device)
 
+        # predict sequence
         for t in range(max(decode_lengths)):
             batch_size_t = sum([l > t for l in decode_lengths])
 

@@ -1,4 +1,3 @@
-import torch.backends.cudnn as cudnn
 import torch.optim
 import torch.utils.data
 from model.Network import Encoder, PredictiveDecoder
@@ -7,8 +6,16 @@ from utils import decode_predicted_sequences
 device = torch.device("cuda:1" if torch.cuda.is_available() else "cpu")
 
 class Predict():
+    """
+    A predict class that receives image data and return decoded sequence
+    """
     def __init__(self, config, reversed_token_map, decode_length, load_path):
-
+        """
+        :param config: configure data
+        :param reversed_token_map: converts prediction to readable format
+        :param decode_length: maximum length of the decoded SMILES format sequence
+        :param load_path: loading path of model
+        """
         self._vocab_size = 70
         self._decode_length = decode_length
         self._emb_dim = int(config['emb_dim'])
@@ -32,14 +39,22 @@ class Predict():
         print(self._model_load_name, 'load successed!')
 
     def SMILES_prediction(self, img):
+        """
+        :param img: preprocessed image data
+        :return: the decoded sequence of molecule image with SMILES format
+        """
 
         self._encoder.eval()
         self._decoder.eval()
 
+        # image to latent vecotr
         encoded_img = self._encoder(img.unsqueeze(0))
+        # predicted sequence vector
         predictions = self._decoder(encoded_img, self._decode_length)
 
+        # predicted sequence value
         SMILES_predicted_sequence = list(torch.argmax(predictions.detach().cpu(), -1).numpy())[0]
+        # converts prediction to readable format from sequence value
         decoded_sequences = decode_predicted_sequences(SMILES_predicted_sequence, self._reversed_token_map)
 
         return decoded_sequences

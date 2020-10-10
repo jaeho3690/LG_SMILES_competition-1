@@ -7,7 +7,6 @@ from torch.nn.utils.rnn import pack_padded_sequence
 from PIL import Image
 
 from rdkit import Chem
-from rdkit import DataStructs
 from rdkit.DataStructs import FingerprintSimilarity as FPS
 from rdkit.Chem import MolFromSmiles,RDKFingerprint
 
@@ -19,14 +18,15 @@ import random
 import numpy as np
 import yaml
 import asyncio
-import os
 
 from itertools import combinations
-from collections import Counter
-import warnings
 
 
 class MSTS:
+    """
+    Molecule Structure To SMILES
+    this class has big three feature that 'train', 'validation', and 'test'
+    """
     def __init__(self, config):
 
         self._work_type = config.work_type
@@ -63,6 +63,7 @@ class MSTS:
 
         self._seed_everything(self._seed)
 
+        # define different decoder by work type
         if self._work_type == 'train':
             self._decoder = DecoderWithAttention(attention_dim=self._attention_dim,
                                                  embed_dim=self._emb_dim,
@@ -78,9 +79,9 @@ class MSTS:
                                               decoder_dim=self._decoder_dim,
                                               vocab_size=self._vocab_size)
             self._decoder.to(self._device)
+
         self._encoder = Encoder()
         self._encoder.to(self._device)
-
         self._encoder.fine_tune(self._fine_tune_encoder)
         self._encoder_optimizer = torch.optim.Adam(params=filter(lambda p: p.requires_grad,
                                                                  self._encoder.parameters()),
@@ -91,14 +92,17 @@ class MSTS:
         self._criterion = nn.CrossEntropyLoss().to(self._device)
 
     def _clip_gradient(self, optimizer, grad_clip):
-
         for group in optimizer.param_groups:
             for param in group['params']:
                 if param.grad is not None:
                     param.grad.data.clamp_(-grad_clip, grad_clip)
 
     def train(self, train_loader):
+        """
 
+        :param train_loader:
+        :return:
+        """
         self._encoder.train()
         self._decoder.train()
 
@@ -175,44 +179,52 @@ class MSTS:
         return mean_loss, mean_accuracy
 
     def model_test(self, submission, data_list, reversed_token_map, transform):
-        print('model_test')
-        self._encoder.to(self._device)
-        self._decoder.to(self._device)
+        """
+        single model test function
+        :param submission: submission file
+        :param data_list: list of test data path
+        :param reversed_token_map: converts prediction to readable format
+        :param transform: normalize function
+        :return:
+        """
         self._encoder.eval()
         self._decoder.eval()
 
+        fault_counter = 0
         for i, dat in enumerate(data_list):
             imgs = Image.open(self._test_file_path + dat)
             imgs = self.png_to_tensor(imgs)
             imgs = transform(imgs).to(self._device)
 
-            predictions = None
-            decoded_sequences = None
-            is_smiles = False
-            add_seed = 0
+            encoded_imgs = self._encoder(imgs.unsqueeze(0))
+            predictions = self._decoder(encoded_imgs, self._decode_length)
 
-            while not is_smiles:
-                self._seed_everything(self._seed + add_seed)
-                encoded_imgs = self._encoder(imgs.unsqueeze(0))
-                predictions = self._decoder(encoded_imgs, self._decode_length)
+            SMILES_predicted_sequence = list(torch.argmax(predictions.detach().cpu(), -1).numpy())[0]
+            decoded_sequences = decode_predicted_sequences(SMILES_predicted_sequence, reversed_token_map)
+            if self.is_smiles(decoded_sequences):
+                fault_counter += 1
 
-                SMILES_predicted_sequence = list(torch.argmax(predictions.detach().cpu(), -1).numpy())[0]
-                decoded_sequences = decode_predicted_sequences(SMILES_predicted_sequence, reversed_token_map)
 
-                is_smiles = self.is_smiles(decoded_sequences)
-                add_seed += 1
-
-                print('{} is {}, {} seed sequence:, {}'.format(i, is_smiles, add_seed, decoded_sequences))
-                break
+            print('{} sequence:, {}'.format(i, decoded_sequences))
 
             submission.loc[submission['file_name']== dat, 'SMILES'] = decoded_sequences
             del (predictions)
 
+        print('total fault:', fault_counter)
         return submission
 
 
     def ensemble_test(self, submission, data_list, reversed_token_map, transform):
+        """
+        ensemble test function
+        :param submission: submission file
+        :param data_list: list of test data path
+        :param reversed_token_map: converts prediction to readable format
+        :param transform: normalize function
+        :return:
+        """
         predictors = []
+        # load .yaml file that contains information about each model
         with open('model/prediction_models.yaml') as f:
             p_configs = yaml.load(f)
 
@@ -220,7 +232,7 @@ class MSTS:
             predictors.append(Predict(conf, reversed_token_map,
                                       self._decode_length, self._model_load_path))
 
-        conf_len = len(p_configs)
+        conf_len = len(p_configs)  # configure length == number of model to use
         fault_counter = 0
         sequence = None
         model_contribution = np.zeros(conf_len)
@@ -229,29 +241,27 @@ class MSTS:
             imgs = self.png_to_tensor(imgs)
             imgs = transform(imgs).to(self._device)
 
-            # predict SMILES sequence form eqch predictors
+            # predict SMILES sequence form each predictors
             preds = []
             for p in predictors:
                 preds.append(p.SMILES_prediction(imgs))
 
-            # print('preds:', preds)
-
-            # fault check
+            # fault check: whether the prediction satisfies the SMILES format or not
             ms = {}
             for idx, p in enumerate(preds):
                 m = MolFromSmiles(p)
                 if m != None:
                     ms.update({idx:m})
 
-            if len(ms) == 0:
+            if len(ms) == 0: # there is no decoded sequence that matches to SMILES format
+                print('decode fail')
                 fault_counter += 1
                 sequence = preds[0]
 
-            elif len(ms) == 1:
-                print('decode fail')
+            elif len(ms) == 1: # there is only one decoded sequence that matches to SMILES format
                 sequence = preds[list(ms.keys())[0]]
 
-            else:
+            else: # there is more than two decoded sequence that matches to SMILES format
                 top_k = 4
                 # result ensemble
                 ms_to_fingerprint = [RDKFingerprint(x) for x in ms.values()]
@@ -259,47 +269,52 @@ class MSTS:
                 ms_to_index = [x for x in ms]
                 combination_index = list(combinations(ms_to_index, 2))
 
-                # print('combination_of_smiles:', combination_of_smiles)
-                # print('combination_index:', combination_index)
-
                 smiles_dict = {}
+                # calculate similarity score
                 for combination, index in zip(combination_of_smiles, combination_index):
                     smiles_dict[index] = (FPS(combination[0], combination[1]))
 
-                # sort by score
+                # sort the pairs by similarity score
                 smiles_dict = sorted(smiles_dict.items(), key=(lambda x: x[1]), reverse=True)
-                # most_common_k = Counter(smiles_dict).most_common(top_k)
 
-                # print('smiles_dict:', smiles_dict)
-
-                if smiles_dict[0][1] == 1.0:
+                if smiles_dict[0][1] == 1.0: # if a similar score is 1 we assume to those predictions are correct.
                     sequence = preds[smiles_dict[0][0][0]]
                 else:
                     score_board = np.zeros(conf_len)
                     for i, (idx, value) in enumerate(smiles_dict):
-                        score_board[list(idx)] += value
+                        score_board[list(idx)] += conf_len-i
 
-                    # print('score_board:', score_board)
-                    pick = int(np.argmax(score_board))
-                    sequence = preds[pick]
-                    model_contribution[pick] += 1
+                    pick = int(np.argmax(score_board)) # choose the index that has the highest score
+                    sequence = preds[pick]  # pick the decoded sequence
+                    model_contribution[pick] += 1 # logging witch model used
                     sequence = preds[np.argmax(score_board)]
 
             print('{} sequence:, {}'.format(i, sequence))
 
             submission.loc[submission['file_name'] == dat, 'SMILES'] = sequence
             del(preds)
+
         print('total fault:', fault_counter)
         print('model contribution:', model_contribution)
         return submission
 
     def png_to_tensor(self, img: Image):
+        """
+        convert png format image to torch tensor with resizing and value rescaling
+        :param img: .png file
+        :return: tensor data
+        """
         img = img.resize((256,256))
         img = np.array(img)
         img = np.moveaxis(img, 2, 0)
         return torch.FloatTensor(img).to(self._device) / 255.
 
     def is_smiles(self, sequence):
+        """
+        check the sequence matches with the SMILES format
+        :param sequence: decoded sequence
+        :return: True or False
+        """
         m = Chem.MolFromSmiles(sequence)
         return False if m == None else True
 

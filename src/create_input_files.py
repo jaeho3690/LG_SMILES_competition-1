@@ -1,7 +1,7 @@
 import argparse
 
-from utils import train_validation_split_df,create_input_files,create_test_files,str2bool
-from config import data_dir,train_dir,test_dir,train_csv_dir,train_pickle_dir,sample_submission_dir,input_data_dir,random_seed
+from .utils import train_validation_split_df, create_input_files, create_test_files, str2bool
+from .config import data_dir, train_dir, test_dir, train_csv_dir, train_pickle_dir, sample_submission_dir, input_data_dir, random_seed
 
 def parse_args():
     parser = argparse.ArgumentParser()
