@@ -9,7 +9,7 @@ class Predict():
     """
     A predict class that receives image data and return decoded sequence
     """
-    def __init__(self, config, reversed_token_map, decode_length, load_path):
+    def __init__(self, config, reversed_token_map, device, decode_length, load_path):
         """
         :param config: configure data
         :param reversed_token_map: converts prediction to readable format
@@ -22,7 +22,7 @@ class Predict():
         self._attention_dim = int(config['attention_dim'])
         self._decoder_dim = int(config['decoder_dim'])
         self._reversed_token_map = reversed_token_map
-        self._device = config.device
+        self._device = device
 
         self._model_load_name = config['load_model_name']
         self._model_load_path = load_path

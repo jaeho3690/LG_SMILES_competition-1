@@ -231,7 +231,7 @@ class MSTS:
             p_configs = yaml.load(f)
 
         for conf in p_configs.values():
-            predictors.append(Predict(conf, reversed_token_map,
+            predictors.append(Predict(conf, reversed_token_map, self._device,
                                       self._decode_length, self._model_load_path))
 
         loop = asyncio.get_event_loop()
