@@ -71,6 +71,7 @@ class MSTS:
                                                  vocab_size=self._vocab_size,
                                                  dropout=self._dropout,
                                                  device=self._device)
+            self._decoder.to(self._device, non_blocking=True)
             self._decoder_optimizer = torch.optim.Adam(params=filter(lambda p: p.requires_grad,
                                                                      self._decoder.parameters()),
                                                        lr=self._decoder_lr)
@@ -81,7 +82,7 @@ class MSTS:
                                               vocab_size=self._vocab_size,
 
                                               device=self._device)
-        self._decoder.to(self._device, non_blocking=True)
+            self._decoder.to(self._device, non_blocking=True)
 
         self._encoder = Encoder(model_type=config.encoder_type)
         self._encoder.to(self._device, non_blocking=True)
