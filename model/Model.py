@@ -254,7 +254,7 @@ class MSTS:
 
         conf_len = len(p_configs)  # configure length == number of model to use
         fault_counter = 0
-        mp.set_start_method('spawn')
+        mp.set_start_method('spawn', force=True)
         sequence = None
         model_contribution = np.zeros(conf_len)
         for i, dat in enumerate(data_list):
@@ -268,7 +268,8 @@ class MSTS:
             # preds = loop.run_until_complete(process_async_prediction(imgs))
             queue = mp.Queue()
             proc = []
-            for model in predictors:
+            for pid, model in enumerate(predictors):
+                print('pid:', pid)
                 p = mp.Process(target= self.model_predict, args=(model, imgs,))
                 p.start()
                 proc.append(p)
