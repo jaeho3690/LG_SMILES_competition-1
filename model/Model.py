@@ -258,7 +258,9 @@ class MSTS:
             imgs = transform(imgs).to(self._device)
 
             # predict SMILES sequence form each predictors
+            pred_time = time.time()
             preds = loop.run_until_complete(process_async_prediction(imgs))
+            print('total pred time:', time.time()-pred_time)
 
             # fault check: whether the prediction satisfies the SMILES format or not
             ms = {}
