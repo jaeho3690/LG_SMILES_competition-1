@@ -237,33 +237,18 @@ class MSTS:
             p_configs = yaml.load(f)
 
         predictors = []
-        # for conf in p_configs.values():
-        #     predictors.append(Predict(conf, reversed_token_map, self._device,
-        #                               self._gpu_non_block,
-        #                               self._decode_length, self._model_load_path))
 
         for conf in p_configs.values():
             predictors.append(Predict.remote(conf, reversed_token_map, self._device,
                               self._gpu_non_block,
                               self._decode_length, self._model_load_path))
-            # RemoteNetwork = ray.remote(Predict)
-            # predictor = RemoteNetwork.remote(conf, reversed_token_map, self._device,
-            #                   self._gpu_non_block,
-            #                   self._decode_length, self._model_load_path)
-            # predictors.append(predictor)
-            # predictors.append(RemoteNetwork.remote())
 
         loop = asyncio.get_event_loop()
-        async def process_async_prediction(imgs):
-            # return [await p.SMILES_prediction(imgs) for p in predictors]
-            return await asyncio.gather(*[p(imgs) for p in predictors])
-
         async def process_async_calculate_similarity(combination_of_smiles, combination_index):
             return {idx: await self.async_fps(comb[0], comb[1]) for comb, idx in zip(combination_of_smiles, combination_index)}
 
         def ray_prediction(imgs):
-            print(predictors)
-            return ray.get([p.forward.decode(imgs) for p in predictors])
+            return ray.get([p.decode.remote(imgs) for p in predictors])
 
 
         conf_len = len(p_configs)  # configure length == number of model to use
@@ -279,20 +264,6 @@ class MSTS:
 
             # predict SMILES sequence form each predictors
             pred_time = time.time()
-            # preds_raw = loop.run_until_complete(process_async_prediction(imgs))
-            # queue = mp.Queue()
-            # proc = []
-            # for pid, model in enumerate(predictors):
-            #     print('pid:', pid)
-            #     p = mp.Process(target=model_predict, args=(model, imgs,))
-            #     print('before process start')
-            #     p.start()
-            #     print('process started!')
-            #     proc.append(p)
-            # for p in proc:
-            #     p.join()
-            # preds = [queue.get()]
-            # preds = loop.run_until_complete(mp_prediction(imgs))
             preds_raw = ray_prediction(imgs)
 
             print('total pred time:', time.time()-pred_time)

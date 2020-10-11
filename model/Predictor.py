@@ -7,7 +7,7 @@ import torch.utils.data
 from model.Network import Encoder, PredictiveDecoder
 from utils import decode_predicted_sequences
 
-@ray.remote
+@ray.remote(num_cpus=1, num_gpus=0.2)
 # class Predict(nn.Module):
 class Predict():
     """
