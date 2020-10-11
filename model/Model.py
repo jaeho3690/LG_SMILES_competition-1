@@ -18,7 +18,7 @@ import random
 import numpy as np
 import yaml
 import asyncio
-
+import time
 from itertools import combinations
 
 
@@ -197,6 +197,7 @@ class MSTS:
 
         fault_counter = 0
         for i, dat in enumerate(data_list):
+            start_time = time.time()
             imgs = Image.open(self._test_file_path + dat)
             imgs = self.png_to_tensor(imgs)
             imgs = transform(imgs).to(self._device)
@@ -211,6 +212,7 @@ class MSTS:
 
 
             print('{} sequence:, {}'.format(i, decoded_sequences))
+            print('decode_time:', start_time - time.time())
 
             submission.loc[submission['file_name']== dat, 'SMILES'] = decoded_sequences
             del (predictions)
@@ -239,23 +241,24 @@ class MSTS:
                                       self._decode_length, self._model_load_path))
 
         loop = asyncio.get_event_loop()
-        async def process_async(imgs):
+        async def process_async_prediction(imgs):
             return [await p.SMILES_prediction(imgs) for p in predictors]
+
+        async def process_async_calculate_similarity(combination_of_smiles, combination_index):
+            return {idx: await self.async_fps(comb[0], comb[1]) for comb, idx in zip(combination_of_smiles, combination_index)}
 
         conf_len = len(p_configs)  # configure length == number of model to use
         fault_counter = 0
         sequence = None
         model_contribution = np.zeros(conf_len)
         for i, dat in enumerate(data_list):
+            start_time = time.time()
             imgs = Image.open(self._test_file_path + dat)
             imgs = self.png_to_tensor(imgs)
             imgs = transform(imgs).to(self._device)
 
             # predict SMILES sequence form each predictors
-            # preds = []
-            # for p in predictors:
-            #     preds.append(p.SMILES_prediction(imgs))
-            preds = loop.run_until_complete(process_async(imgs))
+            preds = loop.run_until_complete(process_async_prediction(imgs))
 
             # fault check: whether the prediction satisfies the SMILES format or not
             ms = {}
@@ -280,10 +283,8 @@ class MSTS:
                 ms_to_index = [x for x in ms]
                 combination_index = list(combinations(ms_to_index, 2))
 
-                smiles_dict = {}
                 # calculate similarity score
-                for combination, index in zip(combination_of_smiles, combination_index):
-                    smiles_dict[index] = (FPS(combination[0], combination[1]))
+                smiles_dict = loop.run_until_complete(process_async_calculate_similarity(combination_of_smiles, combination_index))
 
                 # sort the pairs by similarity score
                 smiles_dict = sorted(smiles_dict.items(), key=(lambda x: x[1]), reverse=True)
@@ -301,6 +302,7 @@ class MSTS:
                     sequence = preds[np.argmax(score_board)]
 
             print('{} sequence:, {}'.format(i, sequence))
+            print('decode_time:', start_time - time.time())
 
             submission.loc[submission['file_name'] == dat, 'SMILES'] = sequence
             del(preds)
@@ -381,3 +383,6 @@ class MSTS:
         torch.cuda.manual_seed(seed)
         torch.cuda.manual_seed_all(seed)
         torch.backends.cudnn.benchmark = True
+
+    async def async_fps(self, m1, m2):
+        return FPS(m1, m2)
