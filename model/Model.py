@@ -13,7 +13,7 @@ from rdkit.Chem import MolFromSmiles,RDKFingerprint
 
 from model.Network import Encoder, DecoderWithAttention, PredictiveDecoder
 from model.Predictor import Predict
-from utils import make_directory, decode_predicted_sequences
+from utils import make_directory, decode_predicted_sequences, Asyncpredict
 
 import random
 import numpy as np
@@ -248,7 +248,7 @@ class MSTS:
         async def mp_prediction(imgs):
             queue = mp.Queue()
             proc = []
-            async for pid, model in enumerate(predictors):
+            async for pid, model in enumerate(Asyncpredict(predictors)):
                 print('pid:', pid)
                 p = mp.Process(target=model_predict, args=(model, imgs,))
                 print('before process start')
