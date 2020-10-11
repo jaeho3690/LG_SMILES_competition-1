@@ -271,7 +271,9 @@ class MSTS:
             for pid, model in enumerate(predictors):
                 print('pid:', pid)
                 p = mp.Process(target= self.model_predict, args=(model, imgs,))
+                print('before process start')
                 p.start()
+                print('process started!')
                 proc.append(p)
             for p in proc:
                 p.join()
