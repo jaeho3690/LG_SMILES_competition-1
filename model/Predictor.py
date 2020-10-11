@@ -1,5 +1,5 @@
 import asyncio
-
+import time
 import torch.optim
 import torch.utils.data
 from model.Network import Encoder, PredictiveDecoder
@@ -45,7 +45,7 @@ class Predict():
         :param img: preprocessed image data
         :return: the decoded sequence of molecule image with SMILES format
         """
-
+        start_time = time.time()
         self._encoder.eval()
         self._decoder.eval()
 
@@ -58,7 +58,7 @@ class Predict():
         SMILES_predicted_sequence = list(torch.argmax(predictions.detach().cpu(), -1).numpy())[0]
         # converts prediction to readable format from sequence value
         decoded_sequences = decode_predicted_sequences(SMILES_predicted_sequence, self._reversed_token_map)
-
+        print('individual prediction time:', time.time()-start_time)
         return decoded_sequences
 
 
