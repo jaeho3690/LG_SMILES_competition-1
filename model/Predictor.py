@@ -61,7 +61,7 @@ class Predict(nn.Module):
         # SMILES_predicted_sequence = list(torch.argmax(predictions.detach().cpu(), -1).numpy())[0]
         # # converts prediction to readable format from sequence value
         # decoded_sequences = decode_predicted_sequences(SMILES_predicted_sequence, self._reversed_token_map)
-        # print('model{} prediction time:'.format(self._model_load_name), time.time()-start_time)
+        print('model{} prediction time:'.format(self._model_load_name), time.time()-start_time)
         # return decoded_sequences
 
         return predictions

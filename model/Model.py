@@ -279,6 +279,11 @@ class MSTS:
             print('total pred time:', time.time()-pred_time)
             print('tmp preds:', preds)
 
+            for p in preds:
+                SMILES_predicted_sequence = list(torch.argmax(p.detach().cpu(), -1).numpy())[0]
+                decoded_sequences = decode_predicted_sequences(SMILES_predicted_sequence, reversed_token_map)
+                p = SMILES_predicted_sequence
+
             # fault check: whether the prediction satisfies the SMILES format or not
             ms = {}
             for idx, p in enumerate(preds):
