@@ -250,7 +250,7 @@ class MSTS:
 
         conf_len = len(p_configs)  # configure length == number of model to use
         fault_counter = 0
-        mp.set_start_method('spawn', force=True)
+        # mp.set_start_method('spawn', force=True)
         sequence = None
         model_contribution = np.zeros(conf_len)
         for i, dat in enumerate(data_list):

@@ -43,7 +43,7 @@ class Predict(nn.Module):
         self.model_load()
         print(self._model_load_name, 'load successed!')
 
-    def forward(self, img):
+    async def forward(self, img):
         """
         :param img: preprocessed image data
         :return: the decoded sequence of molecule image with SMILES format
