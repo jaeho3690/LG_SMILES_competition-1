@@ -230,15 +230,23 @@ class MSTS:
         :param transform: normalize function
         :return:
         """
+        import ray
+        ray.init()
+
         # load .yaml file that contains information about each model
         with open('model/prediction_models.yaml') as f:
             p_configs = yaml.load(f)
 
         predictors = []
+        # for conf in p_configs.values():
+        #     predictors.append(Predict(conf, reversed_token_map, self._device,
+        #                               self._gpu_non_block,
+        #                               self._decode_length, self._model_load_path))
+
         for conf in p_configs.values():
-            predictors.append(Predict(conf, reversed_token_map, self._device,
+            predictors.append(ray.remote(Predict(conf, reversed_token_map, self._device,
                                       self._gpu_non_block,
-                                      self._decode_length, self._model_load_path))
+                                      self._decode_length, self._model_load_path)))
 
         loop = asyncio.get_event_loop()
         async def process_async_prediction(imgs):
@@ -247,6 +255,11 @@ class MSTS:
 
         async def process_async_calculate_similarity(combination_of_smiles, combination_index):
             return {idx: await self.async_fps(comb[0], comb[1]) for comb, idx in zip(combination_of_smiles, combination_index)}
+
+        def ray_prediction(imgs):
+            actor = [p.remote() for p in predictors]
+            return ray.get([a.train.remote(imgs) for a in actor])
+
 
         conf_len = len(p_configs)  # configure length == number of model to use
         fault_counter = 0
@@ -261,7 +274,7 @@ class MSTS:
 
             # predict SMILES sequence form each predictors
             pred_time = time.time()
-            preds_raw = loop.run_until_complete(process_async_prediction(imgs))
+            # preds_raw = loop.run_until_complete(process_async_prediction(imgs))
             # queue = mp.Queue()
             # proc = []
             # for pid, model in enumerate(predictors):
@@ -275,15 +288,15 @@ class MSTS:
             #     p.join()
             # preds = [queue.get()]
             # preds = loop.run_until_complete(mp_prediction(imgs))
+            preds = ray_prediction(imgs)
 
             print('total pred time:', time.time()-pred_time)
             preds=[]
             for p in preds_raw:
                 SMILES_predicted_sequence = list(torch.argmax(p.detach().cpu(), -1).numpy())[0]
                 decoded_sequences = decode_predicted_sequences(SMILES_predicted_sequence, reversed_token_map)
-                preds.append(SMILES_predicted_sequence)
+                preds.append(decoded_sequences)
             del(preds_raw)
-            print('tmp preds:', preds)
 
             # fault check: whether the prediction satisfies the SMILES format or not
             ms = {}
