@@ -13,7 +13,7 @@ from rdkit.Chem import MolFromSmiles,RDKFingerprint
 
 from model.Network import Encoder, DecoderWithAttention, PredictiveDecoder
 from model.Predictor import Predict
-from utils import make_directory, decode_predicted_sequences, Asyncpredict
+from utils import make_directory, decode_predicted_sequences
 
 import random
 import numpy as np
@@ -243,7 +243,7 @@ class MSTS:
         loop = asyncio.get_event_loop()
         async def process_async_prediction(imgs):
             # return [await p.SMILES_prediction(imgs) for p in predictors]
-            return await asyncio.gather(*[p.SMILES_prediction(imgs) for p in predictors])
+            return await asyncio.gather(*[p(imgs) for p in predictors])
 
         async def process_async_calculate_similarity(combination_of_smiles, combination_index):
             return {idx: await self.async_fps(comb[0], comb[1]) for comb, idx in zip(combination_of_smiles, combination_index)}
