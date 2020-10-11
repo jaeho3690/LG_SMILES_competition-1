@@ -212,7 +212,7 @@ class MSTS:
 
 
             print('{} sequence:, {}'.format(i, decoded_sequences))
-            print('decode_time:', start_time - time.time())
+            print('decode_time:', time.time() - start_time)
 
             submission.loc[submission['file_name']== dat, 'SMILES'] = decoded_sequences
             del (predictions)
@@ -302,7 +302,7 @@ class MSTS:
                     sequence = preds[np.argmax(score_board)]
 
             print('{} sequence:, {}'.format(i, sequence))
-            print('decode_time:', start_time - time.time())
+            print('decode_time:', time.time() - start_time)
 
             submission.loc[submission['file_name'] == dat, 'SMILES'] = sequence
             del(preds)
