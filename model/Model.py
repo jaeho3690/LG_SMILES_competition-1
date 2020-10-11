@@ -221,6 +221,10 @@ class MSTS:
         print('total fault:', fault_counter)
         return submission
 
+    def model_predict(self, model, imgs):
+        model.eval()
+        return model(imgs)
+
 
     def ensemble_test(self, submission, data_list, reversed_token_map, transform):
         """
@@ -249,10 +253,6 @@ class MSTS:
         async def process_async_calculate_similarity(combination_of_smiles, combination_index):
             return {idx: await self.async_fps(comb[0], comb[1]) for comb, idx in zip(combination_of_smiles, combination_index)}
 
-        def model_predict(model, imgs):
-            model.eval()
-            return model(imgs)
-
         conf_len = len(p_configs)  # configure length == number of model to use
         fault_counter = 0
         sequence = None
@@ -266,12 +266,12 @@ class MSTS:
             # predict SMILES sequence form each predictors
             pred_time = time.time()
             # preds = loop.run_until_complete(process_async_prediction(imgs))
-            # mp.set_start_method('forkserver')
+            mp.set_start_method('spawn')
             queue = mp.Queue()
             proc = []
             for model in predictors:
-                model.share_memory()
-                p = mp.Process(target= model_predict, args=(model, imgs,))
+                # model.share_memory()
+                p = mp.Process(target= self.model_predict, args=(model, imgs,))
                 p.start()
                 proc.append(p)
             for p in proc:
