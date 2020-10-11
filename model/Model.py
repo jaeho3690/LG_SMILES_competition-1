@@ -256,7 +256,7 @@ class MSTS:
             start_time = time.time()
             imgs = Image.open(self._test_file_path + dat)
             imgs = self.png_to_tensor(imgs)
-            imgs = transform(imgs)
+            imgs = transform(imgs).pin_memory().cuda()
 
             # predict SMILES sequence form each predictors
             pred_time = time.time()

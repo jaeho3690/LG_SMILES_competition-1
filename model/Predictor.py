@@ -27,12 +27,12 @@ class Predict():
         self._model_load_name = config['load_model_name']
         self._model_load_path = load_path
 
-        self._encoder = Encoder(model_type=config['encoder_type']).to(non_blocking=gpu_non_block)
+        self._encoder = Encoder(model_type=config['encoder_type'])
         self._decoder = PredictiveDecoder(attention_dim=self._attention_dim,
                                           embed_dim=self._emb_dim,
                                           decoder_dim=self._decoder_dim,
                                           vocab_size=self._vocab_size,
-                                          device=self._device).to(non_blocking=gpu_non_block)
+                                          device=self._device)
 
         self._encoder.to(self._device, non_blocking=gpu_non_block)
         self._decoder.to(self._device, non_blocking=gpu_non_block)
@@ -46,8 +46,8 @@ class Predict():
         :return: the decoded sequence of molecule image with SMILES format
         """
         start_time = time.time()
-        self._encoder.eval()
-        self._decoder.eval()
+        self._encoder.eval().to(non_blocking=True)
+        self._decoder.eval().to(non_blocking=True)
 
         # image to latent vecotr
         encoded_img = self._encoder(img.unsqueeze(0))
