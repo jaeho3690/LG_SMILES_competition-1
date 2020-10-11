@@ -248,8 +248,10 @@ class MSTS:
         async def mp_prediction(imgs):
             queue = mp.Queue()
             proc = []
-            async for pid, model in enumerate(Asyncpredict(predictors)):
+            pid = 0
+            async for model in Asyncpredict(predictors):
                 print('pid:', pid)
+                pid += 1
                 p = mp.Process(target=model_predict, args=(model, imgs,))
                 print('before process start')
                 p.start()
