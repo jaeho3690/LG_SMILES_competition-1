@@ -200,7 +200,7 @@ class MSTS:
             start_time = time.time()
             imgs = Image.open(self._test_file_path + dat)
             imgs = self.png_to_tensor(imgs)
-            imgs = transform(imgs)
+            imgs = transform(imgs).to(self._device)
 
             encoded_imgs = self._encoder(imgs.unsqueeze(0))
             predictions = self._decoder(encoded_imgs, self._decode_length)
@@ -256,7 +256,7 @@ class MSTS:
             start_time = time.time()
             imgs = Image.open(self._test_file_path + dat)
             imgs = self.png_to_tensor(imgs)
-            imgs = transform(imgs).pin_memory()
+            imgs = transform(imgs)
 
             # predict SMILES sequence form each predictors
             pred_time = time.time()
@@ -324,7 +324,7 @@ class MSTS:
         img = img.resize((256,256))
         img = np.array(img)
         img = np.moveaxis(img, 2, 0)
-        return torch.FloatTensor(img) / 255.
+        return torch.FloatTensor(img).to(self._device) / 255.
 
     def is_smiles(self, sequence):
         """
