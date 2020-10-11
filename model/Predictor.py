@@ -3,7 +3,7 @@ import time
 import torch.optim
 import torch.utils.data
 from model.Network import Encoder, PredictiveDecoder
-from utils import async_decode_predicted_sequences
+from utils import decode_predicted_sequences
 
 class Predict():
     """
@@ -27,12 +27,12 @@ class Predict():
         self._model_load_name = config['load_model_name']
         self._model_load_path = load_path
 
-        self._encoder = Encoder(model_type=config['encoder_type'])
+        self._encoder = Encoder(model_type=config['encoder_type']).to(non_blocking=gpu_non_block)
         self._decoder = PredictiveDecoder(attention_dim=self._attention_dim,
                                           embed_dim=self._emb_dim,
                                           decoder_dim=self._decoder_dim,
                                           vocab_size=self._vocab_size,
-                                          device=self._device)
+                                          device=self._device).to(non_blocking=gpu_non_block)
 
         self._encoder.to(self._device, non_blocking=gpu_non_block)
         self._decoder.to(self._device, non_blocking=gpu_non_block)
@@ -46,8 +46,8 @@ class Predict():
         :return: the decoded sequence of molecule image with SMILES format
         """
         start_time = time.time()
-        self._encoder.eval().to(non_blocking=True)
-        self._decoder.eval().to(non_blocking=True)
+        self._encoder.eval()
+        self._decoder.eval()
 
         # image to latent vecotr
         encoded_img = self._encoder(img.unsqueeze(0))
@@ -55,11 +55,11 @@ class Predict():
         predictions = self._decoder(encoded_img, self._decode_length)
 
         # predicted sequence value
-        # SMILES_predicted_sequence = list(tor/ch.argmax(predictions.detach().cpu(), -1).numpy())[0]
+        SMILES_predicted_sequence = list(torch.argmax(predictions.detach().cpu(), -1).numpy())[0]
         # converts prediction to readable format from sequence value
-        # decoded_sequences = await async_decode_predicted_sequences(SMILES_predicted_sequence, self._reversed_token_map)
+        decoded_sequences = decode_predicted_sequences(SMILES_predicted_sequence, self._reversed_token_map)
         print('model{} prediction time:'.format(self._model_load_name), time.time()-start_time)
-        return predictions
+        return decoded_sequences
 
 
     def model_load(self):
