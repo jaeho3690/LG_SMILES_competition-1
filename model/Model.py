@@ -288,7 +288,7 @@ class MSTS:
             #     p.join()
             # preds = [queue.get()]
             # preds = loop.run_until_complete(mp_prediction(imgs))
-            preds = ray_prediction(imgs)
+            preds_raw = ray_prediction(imgs)
 
             print('total pred time:', time.time()-pred_time)
             preds=[]

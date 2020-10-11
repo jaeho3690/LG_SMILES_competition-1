@@ -7,7 +7,6 @@ import torch.utils.data
 from model.Network import Encoder, PredictiveDecoder
 from utils import decode_predicted_sequences
 
-@ray.remote()
 class Predict(nn.Module):
     """
     A predict class that receives image data and return decoded sequence
@@ -45,7 +44,8 @@ class Predict(nn.Module):
         self.model_load()
         print(self._model_load_name, 'load successed!')
 
-    async def forward(self, img):
+    @ray.remote
+    def forward(self, img):
         """
         :param img: preprocessed image data
         :return: the decoded sequence of molecule image with SMILES format
