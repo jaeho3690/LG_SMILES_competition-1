@@ -257,16 +257,16 @@ class MSTS:
         sequence = None
         model_contribution = np.zeros(conf_len)
         for i, dat in enumerate(data_list):
-            start_time = time.time()
+            # start_time = time.time()
             imgs = Image.open(self._test_file_path + dat)
             imgs = self.png_to_tensor(imgs)
             imgs = transform(imgs).pin_memory().cuda()
 
             # predict SMILES sequence form each predictors
-            pred_time = time.time()
+            # pred_time = time.time()
             preds_raw = ray_prediction(imgs)
 
-            print('total pred time:', time.time()-pred_time)
+            # print('total pred time:', time.time()-pred_time)
             preds=[]
             for p in preds_raw:
                 SMILES_predicted_sequence = list(torch.argmax(p.detach().cpu(), -1).numpy())[0]
@@ -316,7 +316,7 @@ class MSTS:
                     sequence = preds[np.argmax(score_board)]
 
             print('{} sequence:, {}'.format(i, sequence))
-            print('decode_time:', time.time() - start_time)
+            # print('decode_time:', time.time() - start_time)
 
             submission.loc[submission['file_name'] == dat, 'SMILES'] = sequence
             del(preds)
