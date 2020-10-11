@@ -222,8 +222,7 @@ class MSTS:
         return submission
 
     def model_predict(self, model, imgs):
-        model.eval()
-        return model(imgs)
+        return model.SMILES_prediction(imgs)
 
 
     def ensemble_test(self, submission, data_list, reversed_token_map, transform):
