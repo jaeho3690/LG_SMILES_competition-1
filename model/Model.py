@@ -261,7 +261,7 @@ class MSTS:
 
             # predict SMILES sequence form each predictors
             pred_time = time.time()
-            preds = loop.run_until_complete(process_async_prediction(imgs))
+            preds_raw = loop.run_until_complete(process_async_prediction(imgs))
             # queue = mp.Queue()
             # proc = []
             # for pid, model in enumerate(predictors):
@@ -277,12 +277,13 @@ class MSTS:
             # preds = loop.run_until_complete(mp_prediction(imgs))
 
             print('total pred time:', time.time()-pred_time)
-            print('tmp preds:', preds)
-
-            for p in preds:
+            preds=[]
+            for p in preds_raw:
                 SMILES_predicted_sequence = list(torch.argmax(p.detach().cpu(), -1).numpy())[0]
                 decoded_sequences = decode_predicted_sequences(SMILES_predicted_sequence, reversed_token_map)
-                p = SMILES_predicted_sequence
+                preds.append(SMILES_predicted_sequence)
+            del(preds_raw)
+            print('tmp preds:', preds)
 
             # fault check: whether the prediction satisfies the SMILES format or not
             ms = {}
