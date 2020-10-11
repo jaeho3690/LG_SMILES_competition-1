@@ -243,10 +243,13 @@ class MSTS:
         #                               self._gpu_non_block,
         #                               self._decode_length, self._model_load_path))
 
+        RemoteNetwork = ray.remote(Predict())
         for conf in p_configs.values():
-            predictors.append(ray.remote(Predict(conf, reversed_token_map, self._device,
-                                      self._gpu_non_block,
-                                      self._decode_length, self._model_load_path)))
+            predictor = [RemoteNetwork.remote(conf, reversed_token_map, self._device,
+                              self._gpu_non_block,
+                              self._decode_length, self._model_load_path)]
+            predictors.append(predictor)
+
 
         loop = asyncio.get_event_loop()
         async def process_async_prediction(imgs):
@@ -257,8 +260,7 @@ class MSTS:
             return {idx: await self.async_fps(comb[0], comb[1]) for comb, idx in zip(combination_of_smiles, combination_index)}
 
         def ray_prediction(imgs):
-            actor = [p.remote() for p in predictors]
-            return ray.get([a.remote(imgs) for a in actor])
+            return ray.get([p.remote(imgs) for p in predictors])
 
 
         conf_len = len(p_configs)  # configure length == number of model to use
