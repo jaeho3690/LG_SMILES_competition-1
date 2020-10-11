@@ -46,6 +46,27 @@ def decode_predicted_sequences(predicted_sequence_list,reversed_token_map):
     
     return predicted_sequence_str
 
+
+async def async_decode_predicted_sequences(predicted_sequence_list, reversed_token_map):
+    """
+    Args:
+        predicted_sequence_list: List of sequences in predicted form ex) [27,1,2,5]
+        reveresed_token_map: Dictionary mapping of reversed token map
+    Return:
+        predicted_sequence_str:
+    """
+    predicted_sequence_str = ""
+    for e in predicted_sequence_list:
+        e = str(e)
+        if reversed_token_map[e] == '<unk>':
+            continue
+        elif reversed_token_map[e] in {'<end>', '<pad>'}:
+            break
+        else:
+            predicted_sequence_str += reversed_token_map[e]
+
+    return predicted_sequence_str
+
 def smiles_name_print():
     print('  ______   __    __   __   __       ______   ______    ')
     print(' /\  ___\ /\ "-./  \ /\ \ /\ \     /\  ___\ /\  ___\   ')

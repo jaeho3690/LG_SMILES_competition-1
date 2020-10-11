@@ -3,7 +3,7 @@ import time
 import torch.optim
 import torch.utils.data
 from model.Network import Encoder, PredictiveDecoder
-from utils import decode_predicted_sequences
+from utils import async_decode_predicted_sequences
 
 class Predict():
     """
@@ -57,7 +57,7 @@ class Predict():
         # predicted sequence value
         SMILES_predicted_sequence = list(torch.argmax(predictions.detach().cpu(), -1).numpy())[0]
         # converts prediction to readable format from sequence value
-        decoded_sequences = decode_predicted_sequences(SMILES_predicted_sequence, self._reversed_token_map)
+        decoded_sequences = async_decode_predicted_sequences(SMILES_predicted_sequence, self._reversed_token_map)
         print('model{} prediction time:'.format(self._model_load_name), time.time()-start_time)
         return decoded_sequences
 
