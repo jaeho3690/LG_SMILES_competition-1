@@ -15,6 +15,7 @@ from model.Network import Encoder, DecoderWithAttention, PredictiveDecoder
 from model.Predictor import Predict
 from utils import make_directory, decode_predicted_sequences
 
+import ray
 import random
 import numpy as np
 import yaml
@@ -230,8 +231,6 @@ class MSTS:
         :param transform: normalize function
         :return:
         """
-        import ray
-        ray.init()
 
         # load .yaml file that contains information about each model
         with open('model/prediction_models.yaml') as f:

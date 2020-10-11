@@ -4,6 +4,7 @@ import torch
 import torchvision.transforms as transforms
 import pandas as pd
 import time
+import ray
 
 from model.Model import MSTS
 from src.datasets import SmilesDataset
@@ -107,6 +108,7 @@ def main():
             print('the test file path is none')
 
     elif config.work_type == 'ensemble_test':
+        ray.init()
         if not config.test_file_path == None:
 
             submission = pd.read_csv(sample_submission_dir)
