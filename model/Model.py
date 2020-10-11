@@ -221,10 +221,6 @@ class MSTS:
         print('total fault:', fault_counter)
         return submission
 
-    def model_predict(self, model, imgs):
-        return model.SMILES_prediction(imgs)
-
-
     def ensemble_test(self, submission, data_list, reversed_token_map, transform):
         """
         ensemble test function
@@ -270,7 +266,7 @@ class MSTS:
             proc = []
             for pid, model in enumerate(predictors):
                 print('pid:', pid)
-                p = mp.Process(target= self.model_predict, args=(model, imgs,))
+                p = mp.Process(target=model_predict, args=(model, imgs,))
                 print('before process start')
                 p.start()
                 print('process started!')
@@ -408,3 +404,6 @@ class MSTS:
 
     async def async_fps(self, m1, m2):
         return FPS(m1, m2)
+
+def model_predict(model, imgs):
+    return model.SMILES_prediction(imgs)
