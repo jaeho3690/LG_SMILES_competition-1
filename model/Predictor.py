@@ -8,7 +8,8 @@ from model.Network import Encoder, PredictiveDecoder
 from utils import decode_predicted_sequences
 
 @ray.remote
-class Predict(nn.Module):
+# class Predict(nn.Module):
+class Predict():
     """
     A predict class that receives image data and return decoded sequence
     """
@@ -19,7 +20,7 @@ class Predict(nn.Module):
         :param decode_length: maximum length of the decoded SMILES format sequence
         :param load_path: loading path of model
         """
-        super(Predict, self).__init__()
+        # super(Predict, self).__init__()
 
         self._vocab_size = 70
         self._decode_length = decode_length
@@ -45,8 +46,7 @@ class Predict(nn.Module):
         self.model_load()
         print(self._model_load_name, 'load successed!')
 
-    # @ray.remote
-    def forward(self, img):
+    def decode(self, img):
         """
         :param img: preprocessed image data
         :return: the decoded sequence of molecule image with SMILES format

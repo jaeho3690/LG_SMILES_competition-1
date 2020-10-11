@@ -243,14 +243,14 @@ class MSTS:
         #                               self._decode_length, self._model_load_path))
 
         for conf in p_configs.values():
-            # RemoteNetwork = ray.remote(Predict(conf, reversed_token_map, self._device,
-            #                   self._gpu_non_block,
-            #                   self._decode_length, self._model_load_path))
-            RemoteNetwork = ray.remote(Predict)
-            predictor = RemoteNetwork.remote(conf, reversed_token_map, self._device,
+            predictors.append(Predict.remote(conf, reversed_token_map, self._device,
                               self._gpu_non_block,
-                              self._decode_length, self._model_load_path)
-            predictors.append(predictor)
+                              self._decode_length, self._model_load_path))
+            # RemoteNetwork = ray.remote(Predict)
+            # predictor = RemoteNetwork.remote(conf, reversed_token_map, self._device,
+            #                   self._gpu_non_block,
+            #                   self._decode_length, self._model_load_path)
+            # predictors.append(predictor)
             # predictors.append(RemoteNetwork.remote())
 
         loop = asyncio.get_event_loop()
@@ -263,7 +263,7 @@ class MSTS:
 
         def ray_prediction(imgs):
             print(predictors)
-            return ray.get([p.forward.remote(imgs) for p in predictors])
+            return ray.get([p.forward.decode(imgs) for p in predictors])
 
 
         conf_len = len(p_configs)  # configure length == number of model to use
