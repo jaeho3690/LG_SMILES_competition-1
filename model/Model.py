@@ -324,7 +324,7 @@ class MSTS:
         img = img.resize((256,256))
         img = np.array(img)
         img = np.moveaxis(img, 2, 0)
-        return torch.FloatTensor(img).to(self._device) / 255.
+        return torch.FloatTensor(img).pin_memory().to(self._device) / 255.
 
     def is_smiles(self, sequence):
         """
