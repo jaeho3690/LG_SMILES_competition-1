@@ -93,16 +93,22 @@ class PredictiveDecoder(nn.Module):
         self.dropout = dropout
         self.device = device
 
-        self.attention = Attention(encoder_dim, decoder_dim, attention_dim)  # attention network
-
-        self.embedding = nn.Embedding(vocab_size, embed_dim)  # embedding layer
-        self.dropout = nn.Dropout(p=self.dropout)
-        self.decode_step = nn.LSTMCell(embed_dim + encoder_dim, decoder_dim, bias=True)  # decoding LSTMCell
-        self.init_h = nn.Linear(encoder_dim, decoder_dim)  # linear layer to find initial hidden state of LSTMCell
-        self.init_c = nn.Linear(encoder_dim, decoder_dim)  # linear layer to find initial cell state of LSTMCell
-        self.f_beta = nn.Linear(decoder_dim, encoder_dim)  # linear layer to create a sigmoid-activated gate
+        # attention network
+        self.attention = Attention(encoder_dim, decoder_dim, attention_dim).to(non_blocking=True)
+        # embedding layer
+        self.embedding = nn.Embedding(vocab_size, embed_dim).to(non_blocking=True)
+        self.dropout = nn.Dropout(p=self.dropout).to(non_blocking=True)
+        # decoding LSTMCell
+        self.decode_step = nn.LSTMCell(embed_dim + encoder_dim, decoder_dim, bias=True).to(non_blocking=True)
+        # linear layer to find initial hidden state of LSTMCell
+        self.init_h = nn.Linear(encoder_dim, decoder_dim).to(non_blocking=True)
+        # linear layer to find initial cell state of LSTMCell
+        self.init_c = nn.Linear(encoder_dim, decoder_dim).to(non_blocking=True)
+        # linear layer to create a sigmoid-activated gate
+        self.f_beta = nn.Linear(decoder_dim, encoder_dim).to(non_blocking=True)
         self.sigmoid = nn.Sigmoid()
-        self.fc = nn.Linear(decoder_dim, vocab_size)  # linear layer to find scores over vocabulary
+        # linear layer to find scores over vocabulary
+        self.fc = nn.Linear(decoder_dim, vocab_size).to(non_blocking=True)
 
     def init_hidden_state(self, encoder_out):
         mean_encoder_out = encoder_out.mean(dim=1)
