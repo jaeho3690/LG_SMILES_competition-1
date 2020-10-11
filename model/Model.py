@@ -255,6 +255,7 @@ class MSTS:
 
         conf_len = len(p_configs)  # configure length == number of model to use
         fault_counter = 0
+        mp.set_start_method('spawn')
         sequence = None
         model_contribution = np.zeros(conf_len)
         for i, dat in enumerate(data_list):
@@ -266,11 +267,9 @@ class MSTS:
             # predict SMILES sequence form each predictors
             pred_time = time.time()
             # preds = loop.run_until_complete(process_async_prediction(imgs))
-            mp.set_start_method('spawn')
             queue = mp.Queue()
             proc = []
             for model in predictors:
-                # model.share_memory()
                 p = mp.Process(target= self.model_predict, args=(model, imgs,))
                 p.start()
                 proc.append(p)
