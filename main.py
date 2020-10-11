@@ -53,6 +53,10 @@ def main():
 
     config = parser.parse_args()
     make_directory('../' + config.model_save_path)
+
+    device = 'cuda' if torch.cuda.is_available() else 'cpu'
+    config.device = 'cpu' if device == 'cpu' else config.device
+
     model = MSTS(config)
 
     # Custom dataloaders

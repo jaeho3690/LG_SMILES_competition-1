@@ -248,9 +248,9 @@ class MSTS:
             #                   self._gpu_non_block,
             #                   self._decode_length, self._model_load_path))
             RemoteNetwork = ray.remote(Predict)
-            predictor = [RemoteNetwork.remote(conf, reversed_token_map, self._device,
+            predictor = RemoteNetwork.remote(conf, reversed_token_map, self._device,
                               self._gpu_non_block,
-                              self._decode_length, self._model_load_path)]
+                              self._decode_length, self._model_load_path)
             predictors.append(predictor)
             # predictors.append(RemoteNetwork.remote())
 
@@ -263,7 +263,8 @@ class MSTS:
             return {idx: await self.async_fps(comb[0], comb[1]) for comb, idx in zip(combination_of_smiles, combination_index)}
 
         def ray_prediction(imgs):
-            return ray.get([p.remote(imgs) for p in predictors])
+            print(predictors)
+            return ray.get([p.forward.remote(imgs) for p in predictors])
 
 
         conf_len = len(p_configs)  # configure length == number of model to use
