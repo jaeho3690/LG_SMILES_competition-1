@@ -55,11 +55,11 @@ class Predict():
         predictions = self._decoder(encoded_img, self._decode_length)
 
         # predicted sequence value
-        SMILES_predicted_sequence = list(torch.argmax(predictions.detach().cpu(), -1).numpy())[0]
+        # SMILES_predicted_sequence = list(tor/ch.argmax(predictions.detach().cpu(), -1).numpy())[0]
         # converts prediction to readable format from sequence value
-        decoded_sequences = async_decode_predicted_sequences(SMILES_predicted_sequence, self._reversed_token_map)
+        # decoded_sequences = await async_decode_predicted_sequences(SMILES_predicted_sequence, self._reversed_token_map)
         print('model{} prediction time:'.format(self._model_load_name), time.time()-start_time)
-        return decoded_sequences
+        return predictions
 
 
     def model_load(self):
