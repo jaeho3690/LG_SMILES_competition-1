@@ -3,6 +3,7 @@ import torch.optim
 import torch.utils.data
 from torch import nn
 from torch.nn.utils.rnn import pack_padded_sequence
+import torch.multiprocessing as mp
 
 from PIL import Image
 
@@ -260,7 +261,18 @@ class MSTS:
 
             # predict SMILES sequence form each predictors
             pred_time = time.time()
-            preds = loop.run_until_complete(process_async_prediction(imgs))
+            # preds = loop.run_until_complete(process_async_prediction(imgs))
+            mp.set_start_method('spawn')
+            queue = mp.Queue()
+            proc = []
+            for p in predictors:
+                work = mp.Process(target=p.SMILES_prediction, args=(imgs,))
+                work.start()
+                proc.append(work)
+            for p in proc:
+                p.join()
+            preds = [queue.get()]
+
             print('total pred time:', time.time()-pred_time)
             print('tmp preds:', preds)
 
