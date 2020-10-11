@@ -231,11 +231,11 @@ class MSTS:
         :param transform: normalize function
         :return:
         """
-        predictors = []
         # load .yaml file that contains information about each model
         with open('model/prediction_models.yaml') as f:
             p_configs = yaml.load(f)
 
+        predictors = []
         for conf in p_configs.values():
             predictors.append(Predict(conf, reversed_token_map, self._device,
                                       self._gpu_non_block,
@@ -248,6 +248,10 @@ class MSTS:
 
         async def process_async_calculate_similarity(combination_of_smiles, combination_index):
             return {idx: await self.async_fps(comb[0], comb[1]) for comb, idx in zip(combination_of_smiles, combination_index)}
+
+        def model_predict(model, imgs):
+            model.eval()
+            return model(imgs)
 
         conf_len = len(p_configs)  # configure length == number of model to use
         fault_counter = 0
@@ -262,13 +266,13 @@ class MSTS:
             # predict SMILES sequence form each predictors
             pred_time = time.time()
             # preds = loop.run_until_complete(process_async_prediction(imgs))
-            mp.set_start_method('spawn')
+            # mp.set_start_method('forkserver')
             queue = mp.Queue()
             proc = []
-            for p in predictors:
-                work = mp.Process(target=p.SMILES_prediction, args=(imgs,))
-                work.start()
-                proc.append(work)
+            for model in predictors:
+                p = mp.Process(target= model_predict, args=(model, imgs,))
+                p.start()
+                proc.append(p)
             for p in proc:
                 p.join()
             preds = [queue.get()]

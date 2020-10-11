@@ -2,10 +2,12 @@ import asyncio
 import time
 import torch.optim
 import torch.utils.data
+from torch import nn
 from model.Network import Encoder, PredictiveDecoder
 from utils import decode_predicted_sequences
 
-class Predict():
+
+class Predict(nn.Module):
     """
     A predict class that receives image data and return decoded sequence
     """
@@ -40,7 +42,7 @@ class Predict():
         self.model_load()
         print(self._model_load_name, 'load successed!')
 
-    async def SMILES_prediction(self, img):
+    def forward(self, img):
         """
         :param img: preprocessed image data
         :return: the decoded sequence of molecule image with SMILES format
