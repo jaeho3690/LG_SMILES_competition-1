@@ -270,6 +270,7 @@ class MSTS:
             queue = mp.Queue()
             proc = []
             for model in predictors:
+                model.share_memory()
                 p = mp.Process(target= model_predict, args=(model, imgs,))
                 p.start()
                 proc.append(p)
