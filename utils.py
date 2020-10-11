@@ -82,18 +82,3 @@ def str2bool(v):
         return False
     else:
         raise argparse.ArgumentTypeError('Boolean value expected.')
-
-class Asyncpredict:
-    def __init__(self, models):
-        self.models = models
-        self.current = 0
-        self.stop = len(self.models)
-
-    def __aiter__(self):
-        return self
-
-    async def __anext__(self):
-        if self.current < self.stop:
-            return self.models[self.current]
-        else:
-            raise StopAsyncIteration

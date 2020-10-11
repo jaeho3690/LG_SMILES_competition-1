@@ -245,25 +245,6 @@ class MSTS:
             # return [await p.SMILES_prediction(imgs) for p in predictors]
             return await asyncio.gather(*[p.SMILES_prediction(imgs) for p in predictors])
 
-        async def mp_prediction(imgs):
-            queue = mp.Queue()
-            proc = []
-            pid = 0
-            async for model in Asyncpredict(predictors):
-                print('pid:', pid)
-                pid += 1
-                p = mp.Process(target=model_predict, args=(model, imgs,))
-                print('before process start')
-                p.start()
-                print('process started!')
-                proc.append(p)
-            for p in proc:
-                p.join()
-
-            preds = [queue.get()]
-
-            return preds
-
         async def process_async_calculate_similarity(combination_of_smiles, combination_index):
             return {idx: await self.async_fps(comb[0], comb[1]) for comb, idx in zip(combination_of_smiles, combination_index)}
 
@@ -280,7 +261,7 @@ class MSTS:
 
             # predict SMILES sequence form each predictors
             pred_time = time.time()
-            # preds = loop.run_until_complete(process_async_prediction(imgs))
+            preds = loop.run_until_complete(process_async_prediction(imgs))
             # queue = mp.Queue()
             # proc = []
             # for pid, model in enumerate(predictors):
@@ -293,7 +274,7 @@ class MSTS:
             # for p in proc:
             #     p.join()
             # preds = [queue.get()]
-            preds = loop.run_until_complete(mp_prediction(imgs))
+            # preds = loop.run_until_complete(mp_prediction(imgs))
 
             print('total pred time:', time.time()-pred_time)
             print('tmp preds:', preds)
@@ -424,6 +405,3 @@ class MSTS:
 
     async def async_fps(self, m1, m2):
         return FPS(m1, m2)
-
-def model_predict(model, imgs):
-    return model.SMILES_prediction(imgs)
