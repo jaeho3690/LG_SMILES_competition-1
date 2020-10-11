@@ -1,9 +1,3 @@
-#!/usr/bin/env python
-# coding: utf-8
-
-# In[ ]:
-
-
 """
 아래의 코드는 이전에 dataframe_generation_by_group에서 생성된 그룹별 데이터프레임을 
 input으로 하여 train image set을 생성하는 역할을 합니다. 생성된 이미지는 sequence의

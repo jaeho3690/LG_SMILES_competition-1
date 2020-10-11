@@ -5,29 +5,25 @@ from torch import nn
 import torch.optim
 import torch.utils.data
 from model.Network import Encoder, PredictiveDecoder
-from utils import decode_predicted_sequences
 
 @ray.remote(num_cpus=1, num_gpus=0.2)
-# class Predict(nn.Module):
 class Predict():
     """
     A predict class that receives image data and return decoded sequence
     """
-    def __init__(self, config, reversed_token_map, device, gpu_non_block, decode_length, load_path):
+    def __init__(self, config, device, gpu_non_block, decode_length, load_path):
         """
         :param config: configure data
         :param reversed_token_map: converts prediction to readable format
         :param decode_length: maximum length of the decoded SMILES format sequence
         :param load_path: loading path of model
         """
-        # super(Predict, self).__init__()
 
         self._vocab_size = 70
         self._decode_length = decode_length
         self._emb_dim = int(config['emb_dim'])
         self._attention_dim = int(config['attention_dim'])
         self._decoder_dim = int(config['decoder_dim'])
-        self._reversed_token_map = reversed_token_map
         self._device = device
 
         self._model_load_name = config['load_model_name']
@@ -49,9 +45,9 @@ class Predict():
     def decode(self, img):
         """
         :param img: preprocessed image data
-        :return: the decoded sequence of molecule image with SMILES format
+        :return: the decoded sequence of molecule image with sequence token value
         """
-        # start_time = time.time()
+
         self._encoder.eval()
         self._decoder.eval()
 
@@ -59,13 +55,6 @@ class Predict():
         encoded_img = self._encoder(img.unsqueeze(0))
         # predicted sequence vector
         predictions = self._decoder(encoded_img, self._decode_length)
-
-        # # predicted sequence value
-        # SMILES_predicted_sequence = list(torch.argmax(predictions.detach().cpu(), -1).numpy())[0]
-        # # converts prediction to readable format from sequence value
-        # decoded_sequences = decode_predicted_sequences(SMILES_predicted_sequence, self._reversed_token_map)
-        # print('model{} prediction time:'.format(self._model_load_name), time.time()-start_time)
-        # return decoded_sequences
 
         return predictions
 

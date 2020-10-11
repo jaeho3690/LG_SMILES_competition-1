@@ -1,14 +1,9 @@
-#!/usr/bin/env python
-# coding: utf-8
-
-# In[3]:
-
 
 import rdkit
 from rdkit import Chem
 from rdkit.Chem import Draw
 import matplotlib.pyplot as plt
-get_ipython().run_line_magic('matplotlib', 'inline')
+
 import pandas as pd
 from tqdm import tqdm, trange
 import numpy as np

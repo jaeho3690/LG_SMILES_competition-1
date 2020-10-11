@@ -1,9 +1,3 @@
-#!/usr/bin/env python
-# coding: utf-8
-
-# In[ ]:
-
-
 '''
 아래의 코드는 병렬처리를 위해 약 1억 1천만개의 전체 데이터프레임을 코어수에 따라 그룹으로 나누고 
 각각의 그룹의 데이터프레임을 생성하는 코드입니다. 생성된 그룹별 데이터 프레임은 다음 파일인 
@@ -23,7 +17,7 @@ import rdkit
 from rdkit import Chem
 from rdkit.Chem import Draw
 import matplotlib.pyplot as plt
-get_ipython().run_line_magic('matplotlib', 'inline')
+
 import pandas as pd
 from tqdm import tqdm, trange
 import numpy as np

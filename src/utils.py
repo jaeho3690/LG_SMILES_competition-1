@@ -20,11 +20,10 @@ import matplotlib.image as mpimg
 
 
 def train_validation_split_df(data_dir,train_csv_dir,random_seed,train_size=0.8):
-    """ Split images into train,test,val in the dataframe and save them to pickle
-    Args:
-        data_dir: Data directory
-        train_csv_dir: Directory of train csv directory
-    
+    """
+    Split images into train,test,val in the dataframe and save them to pickle
+    :param data_dir: Data directory
+    :param train_csv_dir: Directory of train csv directory
     """
     df = pd.read_csv(train_csv_dir)
 
@@ -58,13 +57,13 @@ def train_validation_split_df(data_dir,train_csv_dir,random_seed,train_size=0.8)
 
 
 def create_input_files(train_dir,train_pickle_dir,output_folder,min_token_freq,max_len=75,random_seed=123):
-    """ Creates input files for train, val, test data
-    Args:
-        train_dir: Directory of train image folder
-        train_csv_dir: Directory of train csv directory
-        output_folder: Directory to save files
-        min_token_freq: token that occurs less frequently than this threshold are binned as <unk>s
-        max_len: Maximum Length of smiles_sequence. The maximum length of smiles_sequence
+    """
+    Creates input files for train, val, test data
+    :param Directory of train image folder
+    :param train_csv_dir: Directory of train csv directory
+    :param output_folder: Directory to save files
+    :param min_token_freq: token that occurs less frequently than this threshold are binned as <unk>s
+    :param max_len: Maximum Length of smiles_sequence. The maximum length of smiles_sequence
     """
     df = pd.read_pickle(train_pickle_dir)
 
@@ -186,7 +185,9 @@ def create_input_files(train_dir,train_pickle_dir,output_folder,min_token_freq,m
 
 
 def create_test_files(submission_csv_dir,test_dir,output_folder):
-    """Create hdf5 format test dataset given by LG"""
+    """
+    Create hdf5 format test dataset given by LG
+    """
     print('Creating TEST FILES')
     submission_df =pd.read_csv(submission_csv_dir)
     test_image_paths = submission_df['file_name'].tolist()
@@ -218,7 +219,8 @@ def create_test_files(submission_csv_dir,test_dir,output_folder):
     print('TEST FILE SAVED')
 
 def split_to_token(word,window=1):
-    """ Split string into tokens with given window size
+    """
+    Split string into tokens with given window size
     """
     chunk_size = len(word)-(window-1)
     return [word[i:i+window] for i in range(0,chunk_size)]

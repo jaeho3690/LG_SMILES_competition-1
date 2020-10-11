@@ -28,11 +28,9 @@ def load_reversed_token_map(path):
 
 def decode_predicted_sequences(predicted_sequence_list,reversed_token_map):
     """
-    Args:
-        predicted_sequence_list: List of sequences in predicted form ex) [27,1,2,5]
-        reveresed_token_map: Dictionary mapping of reversed token map
-    Return:
-        predicted_sequence_str: 
+    :param predicted_sequence_list: List of sequences in predicted form ex) [27,1,2,5]
+    :param reveresed_token_map: Dictionary mapping of reversed token map
+    :return: predicted_sequence_str:
     """
     predicted_sequence_str = ""
     for e in predicted_sequence_list:
@@ -49,11 +47,9 @@ def decode_predicted_sequences(predicted_sequence_list,reversed_token_map):
 
 async def async_decode_predicted_sequences(predicted_sequence_list, reversed_token_map):
     """
-    Args:
-        predicted_sequence_list: List of sequences in predicted form ex) [27,1,2,5]
-        reveresed_token_map: Dictionary mapping of reversed token map
-    Return:
-        predicted_sequence_str:
+    :param predicted_sequence_list: List of sequences in predicted form ex) [27,1,2,5]
+    :param reveresed_token_map: Dictionary mapping of reversed token map
+    :return: predicted_sequence_str:
     """
     predicted_sequence_str = ""
     for e in predicted_sequence_list:

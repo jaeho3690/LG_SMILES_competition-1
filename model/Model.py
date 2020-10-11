@@ -3,7 +3,6 @@ import torch.optim
 import torch.utils.data
 from torch import nn
 from torch.nn.utils.rnn import pack_padded_sequence
-import torch.multiprocessing as mp
 
 from PIL import Image
 
@@ -105,11 +104,6 @@ class MSTS:
                     param.grad.data.clamp_(-grad_clip, grad_clip)
 
     def train(self, train_loader):
-        """
-
-        :param train_loader:
-        :return:
-        """
         self._encoder.train()
         self._decoder.train()
 
@@ -192,7 +186,6 @@ class MSTS:
         :param data_list: list of test data path
         :param reversed_token_map: converts prediction to readable format
         :param transform: normalize function
-        :return:
         """
         self._encoder.eval()
         self._decoder.eval()
@@ -229,9 +222,7 @@ class MSTS:
         :param data_list: list of test data path
         :param reversed_token_map: converts prediction to readable format
         :param transform: normalize function
-        :return:
         """
-
         # load .yaml file that contains information about each model
         with open('model/prediction_models.yaml') as f:
             p_configs = yaml.load(f)
@@ -239,7 +230,7 @@ class MSTS:
         predictors = []
 
         for conf in p_configs.values():
-            predictors.append(Predict.remote(conf, reversed_token_map, self._device,
+            predictors.append(Predict.remote(conf, self._device,
                               self._gpu_non_block,
                               self._decode_length, self._model_load_path))
 
@@ -253,23 +244,21 @@ class MSTS:
 
         conf_len = len(p_configs)  # configure length == number of model to use
         fault_counter = 0
-        # mp.set_start_method('spawn', force=True)
         sequence = None
         model_contribution = np.zeros(conf_len)
         for i, dat in enumerate(data_list):
-            # start_time = time.time()
             imgs = Image.open(self._test_file_path + dat)
             imgs = self.png_to_tensor(imgs)
             imgs = transform(imgs).pin_memory().cuda()
 
             # predict SMILES sequence form each predictors
-            # pred_time = time.time()
             preds_raw = ray_prediction(imgs)
 
-            # print('total pred time:', time.time()-pred_time)
             preds=[]
             for p in preds_raw:
+                # predicted sequence token value
                 SMILES_predicted_sequence = list(torch.argmax(p.detach().cpu(), -1).numpy())[0]
+                # converts prediction to readable format from sequence token value
                 decoded_sequences = decode_predicted_sequences(SMILES_predicted_sequence, reversed_token_map)
                 preds.append(decoded_sequences)
             del(preds_raw)
@@ -290,7 +279,6 @@ class MSTS:
                 sequence = preds[list(ms.keys())[0]]
 
             else: # there is more than two decoded sequence that matches to SMILES format
-                top_k = 4
                 # result ensemble
                 ms_to_fingerprint = [RDKFingerprint(x) for x in ms.values()]
                 combination_of_smiles = list(combinations(ms_to_fingerprint, 2))
@@ -330,7 +318,7 @@ class MSTS:
         """
         convert png format image to torch tensor with resizing and value rescaling
         :param img: .png file
-        :return: tensor data
+        :return: tensor data of float type
         """
         img = img.resize((256,256))
         img = np.array(img)

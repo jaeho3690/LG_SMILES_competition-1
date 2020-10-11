@@ -1,3 +1,13 @@
+# This .yaml file for "ensemble test"
+# each models are used for ensemble
+
+# model order
+#   size of embedded network input dimension
+#   size of decoder network input dimension
+#   size of encoder netowrk input dimension
+#   encoder network type (resnet(res), wide_resnet(wide_res), resnext)
+#   saved file number 'decoder{}'.format(load_model_name) or 'encoder{}'.format(load_model_name)
+
 model1:
   emb_dim: 512
   attention_dim: 512
