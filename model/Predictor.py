@@ -1,4 +1,5 @@
 import asyncio
+import ray
 import time
 from torch import nn
 import torch.optim
@@ -6,6 +7,7 @@ import torch.utils.data
 from model.Network import Encoder, PredictiveDecoder
 from utils import decode_predicted_sequences
 
+@ray.remote()
 class Predict(nn.Module):
     """
     A predict class that receives image data and return decoded sequence

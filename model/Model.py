@@ -258,7 +258,7 @@ class MSTS:
 
         def ray_prediction(imgs):
             actor = [p.remote() for p in predictors]
-            return ray.get([a.train.remote(imgs) for a in actor])
+            return ray.get([a.remote(imgs) for a in actor])
 
 
         conf_len = len(p_configs)  # configure length == number of model to use
