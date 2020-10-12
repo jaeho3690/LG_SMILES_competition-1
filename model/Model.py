@@ -62,6 +62,7 @@ class MSTS:
 
         # define different decoder by work type
         if self._work_type == 'train':
+            make_directory(self._model_save_path + '/' + self._model_name)
             self._decoder = DecoderWithAttention(attention_dim=self._attention_dim,
                                                  embed_dim=self._emb_dim,
                                                  decoder_dim=self._decoder_dim,
@@ -332,12 +333,12 @@ class MSTS:
     def model_save(self, save_num):
         torch.save(
             self._decoder.state_dict(),
-            '../' + '{}/'.format(self._model_save_path) + self._model_name + '/decoder{}.pkl'.format(
+            '{}/'.format(self._model_save_path) + self._model_name + '/decoder{}.pkl'.format(
                 str(save_num))
         )
         torch.save(
             self._encoder.state_dict(),
-            '../' + '{}/'.format(self._model_save_path) + self._model_name + '/encoder{}.pkl'.format(
+            '{}/'.format(self._model_save_path) + self._model_name + '/encoder{}.pkl'.format(
                 str(save_num))
         )
 
@@ -354,8 +355,6 @@ class MSTS:
     def _model_name_maker(self):
         name = 'model-emb_dim_{}-attention_dim_{}-decoder_dim_{}-dropout_{}-batch_size_{}'.format(
             self._emb_dim, self._attention_dim, self._decoder_dim, self._dropout, self._batch_size)
-        make_directory(self._model_save_path + '/' + name)
-
         return name
 
     def _accuracy_calcluator(self, prediction: np.array, target: np.array):

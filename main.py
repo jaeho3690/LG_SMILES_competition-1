@@ -45,11 +45,10 @@ def main():
     parser.add_argument('--test_file_path', type=str, default=None, help='test file path')
 
     config = parser.parse_args()
-    make_directory('../' + config.model_save_path)
 
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     config.device = 'cpu' if device == 'cpu' else config.device
-
+    print('torch work_type:', config.device)
     model = MSTS(config)
 
     # Custom dataloaders
@@ -57,6 +56,7 @@ def main():
                                      std=[0.229, 0.224, 0.225])
 
     if config.work_type == 'train':
+        make_directory(config.model_save_path)
         if not (config.model_load_path == None) and not (config.model_load_num == None):
             model.model_load()
             print('model loaded')
@@ -88,7 +88,7 @@ def main():
     elif config.work_type == 'single_test':
         if not config.test_file_path == None:
 
-            submission = pd.read_csv(sample_submission_dir)
+            submission = pd.read_csv('utils/sample_submission.csv')
             reversed_token_map = load_reversed_token_map(reversed_token_map_dir)
             data_list = os.listdir(config.test_file_path)
 
@@ -105,7 +105,7 @@ def main():
         ray.init()
         if not config.test_file_path == None:
 
-            submission = pd.read_csv(sample_submission_dir)
+            submission = pd.read_csv('utils/sample_submission.csv')
             reversed_token_map = load_reversed_token_map(reversed_token_map_dir)
             data_list = os.listdir(config.test_file_path)
 
