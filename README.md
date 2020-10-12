@@ -7,12 +7,12 @@ Our prediction achieved 0.99567 in private leaderboard(Tanimoto-Similarity based
 Dependencies (with python =3.6)
 ### conda environment
 ```
-conda env create -f LG_CONDA_ENV.yml
+conda env create -f utils/LG_CONDA_ENV.yml
 ```
 
 ### pip dependency
 ```
-pip install pip_requirements.txt
+pip install utils/pip_requirements.txt
 ```
 
 ## Data generation
