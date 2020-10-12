@@ -1,8 +1,16 @@
 # LG_SMILES_competition
-
+This is the source code for LG-HACKATHON hosted by [DACON](https://dacon.io/competitions/official/235640/leaderboard/). The main objective of the competition was to predict the SMILES sequence given a chemical structure image. 
+Our prediction achieved 0.99567 in private leaderboard(Tanimoto-Similarity based)
 ## Requirements
-### conda lib
-### python lib
+### conda environment
+```
+conda env create -f LG_CONDA_ENV.yml
+```
+
+### pip dependency
+```
+pip install pip_requirements.txt
+```
 
 ## Data generation
 
@@ -93,7 +101,7 @@ python main.py --work_type ensemble_test \
 
 ## Optional Arguments
 
-| optional arguments | typs | default | help |
+| optional arguments | types | default | help |
 |---|:---:|:---:|:---|
 |`--work_type` | str |  `train'` | choose work type 'train' or 'test' |
 |`--encoder_type` | str |  `'wide_res'` | choose encoder model type 'wide_res', 'res', and 'resnext'  |
@@ -117,3 +125,14 @@ python main.py --work_type ensemble_test \
 |`--model_load_path` | str |  `None` | model load path |
 |`--model_load_num` | int |  `None` | epoch number of saved model |
 |`--test_file_path` | str |  `None` | test file path |
+
+
+## Top 5-Model Results in Public Score
+
+| Model Name | Dimension | Pubilic Score | DataSet | 
+|---|:---:|:---:|:---|
+|`Wide ResNet101-2` | 512 |  0.9729 | OurDataSet2 |
+|`Wide ResNet101-2` | 512 |  0.9625 | OurDataSet1 |
+|`ResNet152` | 512 |  0.9622 | LG DataSet |
+|`ResNet152` | 256 |  0.9512 | LG DataSet  |
+|`ResNeXt-101-32x8d` | 256 |  0.9677 | OurDataSet1 |
