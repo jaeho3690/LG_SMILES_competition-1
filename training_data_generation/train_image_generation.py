@@ -15,27 +15,21 @@ and are used for the gernalization of model learning.
 
 import rdkit
 import os
-import json
-from collections import OrderedDict
 import numpy as np
 import pandas as pd
 from rdkit import Chem
 from rdkit.Chem import Draw
-from PIL import Image
 from tqdm import tqdm
 import click
-import gc
 
 import warnings
 warnings.filterwarnings(action = 'ignore')
 from rdkit import RDLogger
 RDLogger.DisableLog('rdApp.*')
 
-#data_len = 3700000
-
 # path
-path = '/DATA/dmlab/dongclim/new_images/' # Saving new image
-data_path = '/home/dongclim0613/smiles/train_dataset/'
+path = '/new_images/' # Saving new image
+data_path = '/train_dataset/'
 if os.path.exists(path) == False : 
     os.mkdir(path)
 else:
@@ -85,11 +79,9 @@ def making_data(group):
             
         
             del (smile_plt)
-            # gc.collect()
         except ValueError:
             pass
-           #  print('error smiles:', smiles)
-            
+
         # checking the completion
         if idx % 100000 == 0 :
             print('group : {0}, index : {1}'.format(group, idx))

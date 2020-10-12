@@ -1,9 +1,8 @@
-import numpy as np
 import os
 import random
 import click
 
-DATA_PATH = '/data_path/' # This is a path for original data
+DATA_PATH = '/train_dataset/' # This is a path for original data, and it matches with data_generated directory.
 SAMPLED_PATH = '/sampled_data_path/' # This is a path for sampled data
 
 @click.command()
@@ -24,7 +23,8 @@ def main(random_seed,max_seq,num_sample):
         # just move whole data without sampling.
         if len(os.listdir(DATA_PATH + val)) <= num_sample:
             print('start to sample '+val+'!')
-            os.system('mv '+DATA_PATH+val+' '+destination)
+            os.mkdir(SAMPLED_PATH)
+            os.system('mv '+DATA_PATH+val+' '+SAMPLED_PATH)
 
         # If the number of data in a sequence data folder is bigger than expected number of samples,
         # sample the data with a specific random seed.
@@ -35,7 +35,11 @@ def main(random_seed,max_seq,num_sample):
             random.seed(random_seed)
             sampled_list = random.sample(inner_files,num_sample)
             for i in sampled_list:
-                os.system('mv ' + DATA_PATH + val+'/'+i+' '+destination+val)
+                try:
+                    os.system('mv ' + DATA_PATH + val+'/'+i+' '+SAMPLED_PATH+val)
+                except:
+                    os.mkdir( SAMPLED_PATH)
+                    os.system('mv ' + DATA_PATH + val+'/'+i+' '+SAMPLED_PATH+val)
 
 if __name__ == '__main__':
     main()

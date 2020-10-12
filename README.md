@@ -48,14 +48,44 @@ python --test_file True
 ```
 
 ## How to test
-
+When you try to testing our model by `--work_type single_test` or `--work_type ensemble_test`, you should set the flags.
 ### simgle model test
 ```
-python main.py --work_type single_test --model_load_path <path where the model is saved> --model_load_num <model number> 
+python main.py --work_type single_test --model_load_path <path where the model is saved> --model_load_num <model number> --test_file_path <path where the test images are saved>
 ```
 
 ### ensemble test
 
 ```
-python main.py --work_type ensemble_test --model_load_path <path where the model is saved>
+python main.py --work_type ensemble_test --model_load_path <path where the model is saved> --test_file_path <path where the test images are saved>
 ```
+
+
+## Optional Arguments
+
+| optional arguments | typs | default | help |
+|---|:---:|:---:|:---|
+|`--work_type` | str |  `train'` | choose work type 'train' or 'test' |
+|`--encoder_type` | str |  `'wide_res'` | choose encoder model type 'wide_res', 'res', and 'resnext'  |
+|`--seed` | int |  `1` | set the seed of model |
+|`--decode_length` | int |  `140` | length of decoded SMILES sequence |
+|`--emb_dim` | int |  `512` | dimension of word embeddings |
+|`--attention_dim` | int |  `512` | dimension of attention linear layers |
+|`--decoder_dim` | int |  `512` | dimension of decoder RNN |
+|`--dropout` | float |  `0.5` | droup out rate |
+|`--device` | str |  `'cuda'` | sets device for model and PyTorch tensors |
+|`--gpu_non_block` | bool |  `True` | GPU non blocking flag |
+|`--cudnn_benchmark` | bool |  `True` | set to true only if inputs to model are fixed size; otherwise lot of computational overhead |
+|`--start_epoch` | int |  `0` | number of start epoch |
+|`--epochs` | int |  `50` | number of epochs to train for |
+|`--batch_size` | int |  `384` | batch size |
+|`--workers` | int |  `8` | for data-loading; right now, only 1 works with h5py |
+|`--encoder_lr` | float |  `1e-4` | learning rate for encoder if fine-tuning |
+|`--decoder_lr` | float |  `4e-4` | learning rate for decoer |
+|`--grad_clip` | float |  `5.` | clip gradients at an absolute value of |
+|`--best_bleu4` | float |  `0.` | BLEU-4 score right now |
+|`--fine_tune_encoder` | bool |  `True` | fine-tune encoder |
+|`--model_save_path` | str |  `'graph_save'` | model save path |
+|`--model_load_path` | str |  `None` | model load path |
+|`--model_load_num` | int |  `None` | epoch number of saved model |
+|`--test_file_path` | str |  `None` | test file path |

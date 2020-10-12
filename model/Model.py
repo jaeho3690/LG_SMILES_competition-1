@@ -45,15 +45,12 @@ class MSTS:
 
         self._start_epoch = config.start_epoch
         self._epochs = config.epochs
-        self._epochs_since_improvement = config.epochs_since_improvement
         self._batch_size = config.batch_size
         self._workers = config.workers
         self._encoder_lr = config.encoder_lr
         self._decoder_lr = config.decoder_lr
         self._grad_clip = config.grad_clip
-        self._alpha_c = config.alpha_c
         self._best_bleu4 = config.best_bleu4
-        self._print_freq = config.print_freq
         self._fine_tune_encoder = config.fine_tune_encoder
 
         self._model_save_path = config.model_save_path

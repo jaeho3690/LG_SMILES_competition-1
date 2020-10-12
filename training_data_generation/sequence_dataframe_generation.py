@@ -6,9 +6,6 @@ import matplotlib.pyplot as plt
 
 import pandas as pd
 from tqdm import tqdm, trange
-import numpy as np
-import matplotlib.pyplot as plt
-import os
 
 # CID_SMILES is downloaded from pubchem
 # Uploading the data 
@@ -81,11 +78,8 @@ ending_df = pd.concat([g1,g2,g3,g4,g5,g6,g7,g8,
                        g17,g18,g19,g20,g21,g22,g23,g24,
                        g25,g26,g27,g28,g29,g30,g31])
 # Saving as pickle file
-new_path = '/home/ongclim/sequence_dataframe/'
+new_path = '/sequence_dataframe/'
 ending_df.to_pickle(new_path +'training_dataset_real.pkl')
-
-
-# In[ ]:
 
 
 

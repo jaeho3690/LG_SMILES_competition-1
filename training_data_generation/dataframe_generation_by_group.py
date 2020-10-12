@@ -19,10 +19,7 @@ from rdkit.Chem import Draw
 import matplotlib.pyplot as plt
 
 import pandas as pd
-from tqdm import tqdm, trange
-import numpy as np
-import matplotlib.pyplot as plt
-import os
+from tqdm import tqdm
 
 # CID_SMILES is downloaded from pubchem
 # Uploading the data 
@@ -59,7 +56,7 @@ for i in range(1, 32) :
     filtered_df = df
     filtered_df['group'][(i-1)* 3700000 : i * 3700000] = i
 
-new_path = '/home/ongclim/train_dataset/'
+new_path = '/train_dataset/'
 for i in range(1, 32) :
     g_filtered = filtered_df[filtered_df['group'] == i]
     g_filtered.to_csv(new_path + "filtered_df_group{}.csv".format(i)) 
