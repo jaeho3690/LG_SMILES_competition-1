@@ -78,9 +78,9 @@ python main.py --work_type train \
 ```
 
 ## How to test
-When you try to testing our model by `--work_type single_test` or `--work_type ensemble_test`, you should set the flags.
+When you run prediction with our model, you should choose whether to predict with a single model or an ensamble model. Turn either `--work_type single_test` or `--work_type ensemble_test` flags True.
 ### simgle model test
-single model test requires three flags that 'model load path', 'model load number', and 'test file path'
+single model test requires three flags: `--model load path`, `--model load number`, and `--test file path`
 ```
 python main.py --work_type single_test \
                --model_load_path <path where the model is saved> \
@@ -89,9 +89,9 @@ python main.py --work_type single_test \
 ```
 
 ### ensemble test
-ensemble test requires two flags that 'model load path' that contains five single model and 'test file path'
-this task also needs `./model/prediction_models.yaml` that contains the informations about dimension size of model and type of model.
-the models in the 'model load path' should be matches with this `.yaml` file informations. 
+ensemble model contains weight file of 5 single models. The test requires two flags: `--model load path` and `--test file path`
+Running this script also requires `./model/prediction_models.yaml` which contains hyperparameters of the model and the type of model used.
+The models in the `--model load path` should match with this `prediction_models.yaml` file configurations. 
 ```
 python main.py --work_type ensemble_test \
                --model_load_path <path where the model is saved> \
