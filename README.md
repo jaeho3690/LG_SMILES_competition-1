@@ -1,11 +1,11 @@
 # LG_SMILES_competition
 This is the source code for LG-HACKATHON hosted by [DACON](https://dacon.io/competitions/official/235640/leaderboard/). The main objective of the competition was to predict the SMILES sequence given a chemical structure image. 
 Our prediction achieved 0.99567 in private leaderboard(Tanimoto-Similarity based)
-
-# Model Weight
+![Image](/figures/img_to_smiles.png)
+## Model Weight
 You can download the model weights from this [dropbox](https://www.dropbox.com/sh/88zi2kv7vykgsij/AADAZPhlkA6haDNOvXjvsDaFa?dl=0) link
 
-![Image](/figures/img_to_smiles.png)
+
 ## Requirements
 Dependencies (with python =3.6)
 ### conda environment
