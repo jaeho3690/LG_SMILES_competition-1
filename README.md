@@ -13,8 +13,12 @@
 ```
 
 ### training
+You will need to modify the src/config.py to accustom your directory setting. Running below scripts will return a .hdf5, .json files needed for training and testing.
 ```
-
+# Only if you need to make training and validation set 
+python --split True --train_file True
+# If you need to make a test set provided by LG
+python --test_file True
 ```
 
 ## How to test
