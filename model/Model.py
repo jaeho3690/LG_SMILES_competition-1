@@ -43,14 +43,12 @@ class MSTS:
         self._gpu_non_block = config.gpu_non_block
         self._cudnn_benchmark = config.cudnn_benchmark
 
-        self._start_epoch = config.start_epoch
         self._epochs = config.epochs
         self._batch_size = config.batch_size
         self._workers = config.workers
         self._encoder_lr = config.encoder_lr
         self._decoder_lr = config.decoder_lr
         self._grad_clip = config.grad_clip
-        self._best_bleu4 = config.best_bleu4
         self._fine_tune_encoder = config.fine_tune_encoder
 
         self._model_save_path = config.model_save_path

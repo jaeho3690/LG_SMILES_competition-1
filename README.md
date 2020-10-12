@@ -6,6 +6,21 @@
 
 ## Data generation
 
+### generate molecule image datas
+```
+python training_data_generation/dataframe_generation_by_group.py 
+python training_data_generation/train_image_generation.py 
+```
+### generate data information index
+```
+python training_data_generation/sequence_dataframe_generation.py
+```
+### data sampling
+```
+python training_data_generation/data_sampling.py
+```
+
+
 ## How to train
 ### data preprocessing
 You will need to modify the src/config.py to accustom your directory setting.
@@ -41,23 +56,38 @@ python --split True --train_file True
 python --test_file True
 ```
 
-### training
+### Training
 
 ```
+python main.py --work_type train
+```
 
+if you want to train again form the checkpoint(saved model weight)
+```
+python main.py --work_type train \
+               --model_load_path <path where the model is saved> \
+               --mode_load_num <model number>
 ```
 
 ## How to test
 When you try to testing our model by `--work_type single_test` or `--work_type ensemble_test`, you should set the flags.
 ### simgle model test
+single model test requires three flags that 'model load path', 'model load number', and 'test file path'
 ```
-python main.py --work_type single_test --model_load_path <path where the model is saved> --model_load_num <model number> --test_file_path <path where the test images are saved>
+python main.py --work_type single_test \
+               --model_load_path <path where the model is saved> \
+               --model_load_num <model number> \
+               --test_file_path <path where the test images are saved>
 ```
 
 ### ensemble test
-
+ensemble test requires two flags that 'model load path' that contains five single model and 'test file path'
+this task also needs `./model/prediction_models.yaml` that contains the informations about dimension size of model and type of model.
+the models in the 'model load path' should be matches with this `.yaml` file informations. 
 ```
-python main.py --work_type ensemble_test --model_load_path <path where the model is saved> --test_file_path <path where the test images are saved>
+python main.py --work_type ensemble_test \
+               --model_load_path <path where the model is saved> \
+               --test_file_path <path where the test images are saved>
 ```
 
 
@@ -76,14 +106,12 @@ python main.py --work_type ensemble_test --model_load_path <path where the model
 |`--device` | str |  `'cuda'` | sets device for model and PyTorch tensors |
 |`--gpu_non_block` | bool |  `True` | GPU non blocking flag |
 |`--cudnn_benchmark` | bool |  `True` | set to true only if inputs to model are fixed size; otherwise lot of computational overhead |
-|`--start_epoch` | int |  `0` | number of start epoch |
 |`--epochs` | int |  `50` | number of epochs to train for |
 |`--batch_size` | int |  `384` | batch size |
 |`--workers` | int |  `8` | for data-loading; right now, only 1 works with h5py |
 |`--encoder_lr` | float |  `1e-4` | learning rate for encoder if fine-tuning |
 |`--decoder_lr` | float |  `4e-4` | learning rate for decoer |
 |`--grad_clip` | float |  `5.` | clip gradients at an absolute value of |
-|`--best_bleu4` | float |  `0.` | BLEU-4 score right now |
 |`--fine_tune_encoder` | bool |  `True` | fine-tune encoder |
 |`--model_save_path` | str |  `'graph_save'` | model save path |
 |`--model_load_path` | str |  `None` | model load path |

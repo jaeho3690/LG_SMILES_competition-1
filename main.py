@@ -31,24 +31,18 @@ def main():
     parser.add_argument('--gpu_non_block', type=str2bool, default=True, help='GPU non blocking flag')
     parser.add_argument('--cudnn_benchmark', type=str2bool, default=True, help='set to true only if inputs to model are fixed size; otherwise lot of computational overhead')
 
-    parser.add_argument('--start_epoch', type=int, default=0, help='number of start epoch')
     parser.add_argument('--epochs', type=int, default=50, help='number of epochs to train for')
     parser.add_argument('--batch_size', type=int, default=384, help='batch size')
     parser.add_argument('--workers', type=int, default=8, help='for data-loading; right now, only 1 works with h5py')
     parser.add_argument('--encoder_lr', type=float, default=1e-4, help='learning rate for encoder if fine-tuning')
     parser.add_argument('--decoder_lr', type=float, default=4e-4, help='learning rate for decoer')
     parser.add_argument('--grad_clip', type=float, default=5., help='clip gradients at an absolute value of')
-    parser.add_argument('--alpha_c', type=float, default=1., help="regularization parameter for 'doubly stochastic attention', as in the paper")
-    parser.add_argument('--best_bleu4', type=float, default=0., help='BLEU-4 score right now')
     parser.add_argument('--fine_tune_encoder', type=str2bool, default=True, help='fine-tune encoder')
 
     parser.add_argument('--model_save_path', type=str, default='graph_save', help='model save path')
     parser.add_argument('--model_load_path', type=str, default=None, help='model load path')
     parser.add_argument('--model_load_num', type=int, default=None, help='epoch number of saved model')
     parser.add_argument('--test_file_path', type=str, default=None, help='test file path')
-    # parser.add_argument('--model_load_path', type=str, default='/home/hjyang/final_model_1', help='model load path')
-    # parser.add_argument('--model_load_num', type=int, default=6, help='epoch number of saved model')
-    # parser.add_argument('--test_file_path', type=str, default='/home/hjyang/test/', help='test file path')
 
     config = parser.parse_args()
     make_directory('../' + config.model_save_path)
@@ -66,6 +60,8 @@ def main():
         if not (config.model_load_path == None) and not (config.model_load_num == None):
             model.model_load()
             print('model loaded')
+        else:
+            print('start from initial')
 
         train_loader = torch.utils.data.DataLoader(
             SmilesDataset(input_data_dir, base_file_name, 'TRAIN',
