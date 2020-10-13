@@ -85,7 +85,7 @@ python main.py --work_type train \
 ```
 
 ## How to test
-When you run prediction with our model, you should choose whether to predict with a single model or an ensamble model. Turn either `--work_type single_test` or `--work_type ensemble_test` flags True.
+When you run prediction with our model, you should choose whether to predict with a single model or an ensamble model. Set flag as `--work_type single_test` or `--work_type ensemble_test`.
 ### simgle model test
 single model test requires three flags: `--model load path`, `--model load number`, and `--test file path`
 ```
