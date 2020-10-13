@@ -5,7 +5,8 @@ Our prediction achieved 0.99567 in private leaderboard(Tanimoto-Similarity based
 ## Model Weight
 You can download the model weights from this [dropbox](https://www.dropbox.com/sh/88zi2kv7vykgsij/AADAZPhlkA6haDNOvXjvsDaFa?dl=0) link
 
-
+## Token Map & Reversed Token Map
+You can download the token map and reversed token map from this [dropbox](https://www.dropbox.com/sh/mzx152xu2bkvpvq/AACFeabWeq7eExvG63iATD8Za?dl=0) link
 
 ## Requirements
 Dependencies (with python =3.6)
