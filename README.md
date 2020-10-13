@@ -66,9 +66,9 @@ reversed_token_map_dir = input_data_dir/ f'REVERSED_TOKENMAP_{base_file_name}.js
 Running below scripts will return a .hdf5, .json files needed for training and testing.
 ```
 # Only if you need to make training and validation set 
-python --split True --train_file True
+python create_input_files.py --split True --train_file True
 # If you need to make a test set provided by LG
-python --test_file True
+python create_input_files.py --test_file True
 ```
 
 ### Training
