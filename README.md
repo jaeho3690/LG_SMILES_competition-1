@@ -144,3 +144,8 @@ python main.py --work_type ensemble_test \
 |`ResNet152` | 512 |  0.9622 | LG DataSet |
 |`ResNet152` | 256 |  0.9512 | LG DataSet  |
 |`ResNeXt-101-32x8d` | 256 |  0.9677 | OurDataSet1 |
+
+
+## References
+- https://github.com/sgrvinod/a-PyTorch-Tutorial-to-Image-Captioning
+- https://arxiv.org/pdf/1502.03044.pdf
